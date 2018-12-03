@@ -11,104 +11,102 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC 
 from selenium.common.exceptions import TimeoutException
 
+from time import sleep
 import warnings
 
 warnings.filterwarnings('ignore')
 
 
-
-def site_table_reader():
-    # send GET request using selenium and check status
+# create function get_page_data(site_url)
+def get_page_data(site_url):
+    # send GET request using selenium (sites in javascript) and check status
     option = webdriver.ChromeOptions()
     option.add_argument(' - incognito')
 
     browser = webdriver.Chrome(executable_path='/usr/local/bin/chromedriver', chrome_options=option)
-    site_url = 'https://www.congress.gov/search?q=%7B%22source%22%3A%22legislation%22%7D'
-    
+
     req = requests.get(site_url)
     print('_______________')
+    print('_______________')
     print('Request Status Code: {}'.format(req.status_code))
-    
-    browser.get(site_url)
-    
-    # # save html into mongo
-    # client = MongoClient('mongodb://localhost:27017/')
-    # db = client.bills
-    # pages = db.pages
-    # pages.insert_one({'html': req.content})
 
-    # parse the html with BeautifulSoup
+    # render in browser and parse the html with BeautifulSoup
+    browser.get(site_url)
     soup = bs(browser.page_source, 'lxml')
     print('--------------')
-    print('--------------')
+    print(site_url)
     print(soup.title)
-    print('--------------')
     # print(soup.prettify())
 
+    # table of bills are in ol class
     # navigate to find bill info
     div = soup.find('div', {'class':'search-column-main'})
-    tab = div.find('ol')
-    # print(tab)
+    table = div.find('ol')
+    # print(table.prettify())
 
-    all_rows = []
+    # iterate though each li class expanded to get rows
+    rows = table.find_all('li', {'class':'expanded'})
+#     print(rows[0].prettify())
 
-    # # # store each row in a dictionary
+    return rows
+
+# function to add items to mongo
+def add_to_mongo(rows):
+    # initialize mongo to add items as we iterate through them
+    client = MongoClient('mongodb://localhost:27017/')
+    db = client.bills
+    pages = db.pages
+
+
+    # store each row as key-value pair in a dictionary
     empty_row = {'bill_id': None, 
                 'bill_url': None, 
                 'congress_id': None,
                 'desc': None,
                 'sponsor': None, 
+    #             'cosponsors': None,  #requires navigation to another url and extracting names from table
                 'committee': None, 
-                'body': None
+                'bill_status': None,
+                'body': None   #requires navigation to another url
                 }
 
-    #  need to iterate though each li class to find the above
-    rows = tab.find_all('li')
-    # pprint.pprint(rows)
 
-    for row in rows[1:]:
-        columns = row.find_all('span', {'class': 'result-heading'})
-        if len(columns) > 0:
-            print(len(columns))
-            print(len(columns))
-            print(len(columns))
+    # all_rows = []
 
-            for col in columns:
-                pprint.pprint(col)
-                print(len(col))
-                # heading = col.find_all('span', {'class': 'result-heading'})
-                print('~~~~~~~~~~~~~~~')
-                print(col[0])
-                print(col[1])
-                # if len(col) == 2:
-                #     print('111111111: {}'.format(col[0]))
-                #     print('222222222: {}'.format(col[1]))
-                print ('vvvvvvvvvvvvv')
-                print ('vvvvvvvvvvvvv')
-                print ('vvvvvvvvvvvvv')
-                # row = row.find_all('span', {'class': 'result_heading'})
-            # pprint.pprint(columns)
+    # iterate through each of the 'rows' to fill in the 'columns'
+    for row in rows:
+        new_row = copy.copy(empty_row)
 
+        columns = row.find_all('a')
+        new_row['bill_id'] = columns[0].text.strip()
+        new_row['bill_url'] = columns[0]['href'].strip()
+        new_row['sponsor'] = columns[1].text.strip()
 
+        columns = row.find_all('span')
+        new_row['congress_id'] = columns[1].text.strip().split()[2]
+        new_row['desc'] = columns[2].text
+        new_row['committee'] = columns[4].text.strip()[12:]
 
-    # # # initialize iterator over the rows in the table
-    # rows = tab.find_all('span')
+        columns = row.find_all('p')
+        new_row['bill_status'] = columns[0].text.strip()[25:]
 
-
-    # for row in rows[1:]:
-    #     new_row = copy.copy(empty_row)
-
-    #     # a list of all he entries in the row
-    #     columns = row.find_all('td')
-        # print(columns)
-    #     # new_row['bill_id'] = columns[0].text.strip())
-    #     # new_row['bill_desc'] = columns[0].text.strip())
-    #     # new_row['intro_date'] = columns[0].text.strip())
-    #     # new_row['bill_url'] = columns[0].text.strip())
-    #     # new_row['body'] = columns[0].text.strip())
-
+    #     all_rows.append(new_row)
+    
+    #     store info in mongo
+        pages.insert_one(new_row)
 
 
 
 if __name__ == '__main__':
-    site_table_reader()
+    # the 101st Congress (1989 - 1990) starts on pg 1011 for pageSize=250
+    site_url_root = 'https://www.congress.gov/search?q={%22source%22:%22legislation%22}&pageSize=250'
+    for i in range(1, 1011):
+        site_url = site_url_root + '&page={}'.format(i)
+        print(site_url)
+        sleep(20)
+        rows = get_page_data(site_url)
+        add_to_mongo(rows)
+
+    # all_rows[-5:]
+
+    print('Count of lines loaded: {}'.format(pages.find().count()))
