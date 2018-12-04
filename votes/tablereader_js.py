@@ -126,7 +126,7 @@ if __name__ == '__main__':
         
     # the 101st Congress (1989 - 1990) starts on pg 1011 for pageSize=250
     site_url_root = 'https://www.congress.gov/search?q={%22source%22:%22legislation%22}&pageSize=250'
-    for i in range(1, 200):
+    for i in range(501, 1012):
         site_url = site_url_root + '&page={}'.format(i)
         sleep(5)
         rows = page_to_mongo(site_url, pages)
