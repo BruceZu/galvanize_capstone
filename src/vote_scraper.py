@@ -13,8 +13,6 @@ import warnings
 import codecs
 import json
 
-import boto
-
 def write_json_file(obj, path):
     '''Dump an object and write it out as json to a file'''
     f = codecs.open(path, 'a', 'utf-8')
@@ -150,8 +148,8 @@ def get_vote_results(yr, roll_id):
 
     # print verification that iterator is working
     if roll_id%100 == 0:
-        print('\t\t... working ... ... ... ... ... ...')
         print('\t\t... getting results for Roll ID {}'.format(roll_id))
+        print('\t\t... working ... ... ... ... ... ...')
 
     if stat_code != 200:
         print('_______________')
@@ -195,6 +193,6 @@ if __name__ == '__main__':
     house_url_root = 'http://clerk.house.gov/evs'
 
     # date_range = list(range(1990, 2019))
-    date_range = list(range(1990, 1992))
+    date_range = list(range(1993, 2019))
 
     get_all_votes(date_range, house_url_root)
