@@ -145,7 +145,7 @@ for i in range(len(bills)):
 # iterate through dataframe to build url and scrape bill text
 # example: https://www.congress.gov/bill/103rd-congress/house-bill/3400/text
 print('----------------')
-print('... finally scraping bill texts... ')
+print('... finally... scraping bill texts... ')
 
 bills['bill_text'] = None
 
@@ -160,50 +160,62 @@ empty_row = {
     'bill_text':None    
 }
 
-for i in range(len(bills)):
-    issue = bills.iloc[i, 1]
-    c_id = bills.iloc[i, 2]
-    b_type = bills.iloc[i, 3]
-    b_num = bills.iloc[i, 4]
-    
-    site_url = '{}/{}/{}/{}/text?format=txt'.format(root_url, c_id, b_type, b_num)
-    
-    if i%100 == 0:
-        pct = 100 * i / len(bills)
-        print('\t{:.2f} complete'.format(pct))
-    
-    req = requests.get(site_url)
-    stat_code = req.status_code
+def to_jsonl_by_year(df, yr_list):
+    for y in yr_list:
+        print('Year: {}'.format(y))
+        bills = df[df['year'] == y]
+        for i in range(len(bills)):
+            issue = bills.iloc[i, 1]
+            c_id = bills.iloc[i, 2]
+            b_type = bills.iloc[i, 3]
+            b_num = bills.iloc[i, 4]
 
-    if stat_code != 200:
-        print('_______________')
-        print('_______________')
-        print('\t\tError in retrieving vote results for {}'.format(site_url))
-        print('\t\tRequest Status Code: {}, {}'.format(stat_code, tstamp))
-        errored_line = {'url': site_url, 'stat_code': stat_code}
-        write_json_file(errored_line, '../data/logs/bill_text_errors.jsonl')
+            site_url = '{}/{}/{}/{}/text?format=txt'.format(root_url, c_id, b_type, b_num)
 
-    if stat_code == 200:
-        req = requests.get(site_url)
-        soup = BeautifulSoup(req.content, 'lxml')
-        # print(soup.prettify())
-        bill_txt = soup.find('pre').text
-        bill_txt = ' '.join(bill_txt.split())
-        
-        new_row = copy.copy(empty_row)
-        new_row['year'] = str(bills.iloc[i, 0])
-        new_row['issue'] = str(bills.iloc[i, 1])
-        new_row['congress_id'] = str(bills.iloc[i, 2])
-        new_row['bill_type'] = str(bills.iloc[i, 3])
-        new_row['bill_num'] = str(bills.iloc[i, 4])
-        new_row['bill_text'] = bill_txt
-        
-        write_json_file(new_row, '../data/bill_texts.jsonl')
-        
-    i += 1
+            if i%50 == 0:
+                pct = 100 * i / len(bills)
+                print('\t{:.2f} complete'.format(pct))
 
+            req = requests.get(site_url)
+            stat_code = req.status_code
+
+            if stat_code != 200:
+                print('_______________')
+                print('_______________')
+                print('\t\tError in retrieving vote results for {}'.format(site_url))
+                print('\t\tRequest Status Code: {}'.format(stat_code))
+                errored_line = {'url': site_url, 'stat_code': stat_code}
+                write_json_file(errored_line, '../data/logs/bill_text_errors.jsonl')
+
+            if stat_code == 200:
+                req = requests.get(site_url)
+                soup = BeautifulSoup(req.content, 'lxml')
+                # print(soup.prettify())
+                bill_txt = soup.find('pre').text
+                bill_txt = ' '.join(bill_txt.split())
+
+                new_row = copy.copy(empty_row)
+                new_row['year'] = str(bills.iloc[i, 0])
+                new_row['issue'] = str(bills.iloc[i, 1])
+                new_row['congress_id'] = str(bills.iloc[i, 2])
+                new_row['bill_type'] = str(bills.iloc[i, 3])
+                new_row['bill_num'] = str(bills.iloc[i, 4])
+                new_row['bill_text'] = bill_txt
+                
+                outfile = '../data/bill_texts_{}.jsonl'.format(y)
+
+                write_json_file(new_row, outfile)
+
+        i += 1
+
+# year_list = range(1990, 2019)
+# 1991 is 89% incomplete
+year_list = range(1992, 2019)
+for y in year_list:
+    to_jsonl_by_year(bills, year_list)
+    print('Year {} complete.'.format(y))
 
 print('----------------')
-print('Script complete. Check results in ../data/bill_texts.jsonl, web-scraper!')
+print('Script complete. Check results in ../data/bill_texts.jsonl. DATA SCIENCE!!!')
 
     
