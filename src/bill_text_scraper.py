@@ -180,6 +180,7 @@ def to_jsonl_by_year(df, yr_list):
             req = requests.get(site_url)
             stat_code = req.status_code
 
+            # if error in getting url, print and log the error
             if stat_code != 200:
                 print('_______________')
                 print('_______________')
@@ -194,7 +195,7 @@ def to_jsonl_by_year(df, yr_list):
                 soup = BeautifulSoup(req.content, 'lxml')
                 # print(soup.prettify())
                 
-                # if there is no text
+                # if there is no text, print and log the error
                 if soup.find('pre') is None:
                     print('_______________')
                     print('_______________')
@@ -223,10 +224,12 @@ def to_jsonl_by_year(df, yr_list):
                     write_json_file(new_row, outfile)
 
         i += 1
-        
+
         if i == len(bills) - 1:
             print('\t100.00 complete')
             print('\tYear {} complete.'.format(y))
+            print('------------------------')
+            print('------------------------')
 
 # year_list = range(1990, 2019)
 # 1991 is 89% incomplete
@@ -234,7 +237,11 @@ def to_jsonl_by_year(df, yr_list):
 # 2007 is 90% complete
 # year_list = range(2008, 2019)
 # 2013 83% complete
-year_list = range(2013, 2019)
+# year_list = range(2013, 2019)
+
+# year_list = [1991, 2007, 2013]
+year_list = [1991]
+
 
 for y in year_list:
     to_jsonl_by_year(bills, year_list)
@@ -243,4 +250,4 @@ for y in year_list:
 print('----------------')
 print('Script complete. Check results in ../data/bill_texts.jsonl. DATA SCIENCE!!!')
 
-    
+

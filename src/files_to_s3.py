@@ -19,7 +19,7 @@ legislation_bucket = conn.get_bucket('galvcap-leg')
 print('Keys currently in bucket galvcap-leg: {}'.format(legislation_bucket.get_all_keys()))
 
 for f in os.listdir('../data'):
-    if f.startswith('vote_results'):
+    if f.startswith('bill_texts'):
         print('Loading {} to s3'.format(f))
         # create new key in s3
         file_ = legislation_bucket.new_key(f)

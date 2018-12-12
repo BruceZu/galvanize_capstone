@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Agile Data Science</title>
+    <title>Galvanize Capstone</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Bootstrap example in Agile Data Science, 2.0">
     <meta name="author" content="Russell Jurney">
@@ -16,21 +16,25 @@
       <!-- Begin page content -->
       <div class="container">
         <div class="page-header">
-          <h1>Agile Data Science</h1>
+          <h1>Galvanize Capstone</h1>
         </div>
-        <p class="lead">Executives</p>
+        <p class="lead">Bill Details</p>
         <table class="table">
           <thead>
-              <th>Name</th>
-              <th>Company</th>
-              <th>Title</th>
+              <th>Bill ID</th>
+              <th>Legislation Type</th>
+              <th>Sponsor</th>
+              <th>Status</th>
+              <th>Description</th>
           </thead>
           <tbody>
-            {% for executive in executives -%}
+            {% for row in rows -%}
             <tr>
-              <td>{{executive.name}}</td>
-              <td>{{executive.company}}</td>
-              <td>{{executive.title}}</td>
+              <td>{{row.leg_id}}</td>
+              <td>{{row.leg_type}}</td>
+              <td>{{row.sponsor}}</td>
+              <td>{{row.bill_status}}</td>
+              <td>{{row.desc}}</td>
             </tr>
             {% endfor -%}
           </tbody>
@@ -42,7 +46,7 @@
 
     <div id="footer">
       <div class="container">
-        <p class="muted credit"><a href="http://shop.oreilly.com/product/0636920025054.do">Agile Data Science</a> by <a href="http://www.linkedin.com/in/russelljurney">Russell Jurney</a>, 2016
+        <p class="muted credit">Template borrowed from <a href="http://shop.oreilly.com/product/0636920025054.do">Agile Data Science</a> by <a href="http://www.linkedin.com/in/russelljurney">Russell Jurney</a>, 2016
       </div>
     </div>
     <script src="/static/bootstrap.min.js"></script>
