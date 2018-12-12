@@ -171,6 +171,7 @@ def to_jsonl_by_year(df, yr_list):
             b_num = bills.iloc[i, 4]
 
             site_url = '{}/{}/{}/{}/text?format=txt'.format(root_url, c_id, b_type, b_num)
+#             print(site_url)
 
             if i%50 == 0:
                 pct = 100 * i / len(bills)
@@ -182,38 +183,62 @@ def to_jsonl_by_year(df, yr_list):
             if stat_code != 200:
                 print('_______________')
                 print('_______________')
-                print('\t\tError in retrieving vote results for {}'.format(site_url))
+                print('\t\tError in retrieving bill text from {}'.format(site_url))
                 print('\t\tRequest Status Code: {}'.format(stat_code))
-                errored_line = {'url': site_url, 'stat_code': stat_code}
+                errored_line = {'url': site_url, 'error': stat_code}
                 write_json_file(errored_line, '../data/logs/bill_text_errors.jsonl')
+                print('Error logged in ../data/logs/bill_text_errors.jsonl')
 
             if stat_code == 200:
                 req = requests.get(site_url)
                 soup = BeautifulSoup(req.content, 'lxml')
                 # print(soup.prettify())
-                bill_txt = soup.find('pre').text
-                bill_txt = ' '.join(bill_txt.split())
-
-                new_row = copy.copy(empty_row)
-                new_row['year'] = str(bills.iloc[i, 0])
-                new_row['issue'] = str(bills.iloc[i, 1])
-                new_row['congress_id'] = str(bills.iloc[i, 2])
-                new_row['bill_type'] = str(bills.iloc[i, 3])
-                new_row['bill_num'] = str(bills.iloc[i, 4])
-                new_row['bill_text'] = bill_txt
                 
-                outfile = '../data/bill_texts_{}.jsonl'.format(y)
+                # if there is no text
+                if soup.find('pre') is None:
+                    print('_______________')
+                    print('_______________')
+                    print('\t\tError in retrieving bill text from {}'.format(site_url))
+                    print('\t\tNo text available for scraping.')
+                    errored_line = {'url': site_url, 'error': 'no text available'}
+                    write_json_file(errored_line, '../data/logs/bill_text_errors.jsonl')
+                    print('Error logged in ../data/logs/bill_text_errors.jsonl')
+                    
+    
+                # else scrape the text
+                else:
+                    bill_txt = soup.find('pre').text
+                    bill_txt = ' '.join(bill_txt.split())
 
-                write_json_file(new_row, outfile)
+                    new_row = copy.copy(empty_row)
+                    new_row['year'] = str(bills.iloc[i, 0])
+                    new_row['issue'] = str(bills.iloc[i, 1])
+                    new_row['congress_id'] = str(bills.iloc[i, 2])
+                    new_row['bill_type'] = str(bills.iloc[i, 3])
+                    new_row['bill_num'] = str(bills.iloc[i, 4])
+                    new_row['bill_text'] = bill_txt
+
+                    outfile = '../data/bill_texts_{}.jsonl'.format(y)
+
+                    write_json_file(new_row, outfile)
 
         i += 1
+        
+        if i == len(bills) - 1:
+            print('\t100.00 complete')
+            print('\tYear {} complete.'.format(y))
 
 # year_list = range(1990, 2019)
 # 1991 is 89% incomplete
-year_list = range(1992, 2019)
+# year_list = range(1992, 2019)
+# 2007 is 90% complete
+# year_list = range(2008, 2019)
+# 2013 83% complete
+year_list = range(2013, 2019)
+
 for y in year_list:
     to_jsonl_by_year(bills, year_list)
-    print('Year {} complete.'.format(y))
+
 
 print('----------------')
 print('Script complete. Check results in ../data/bill_texts.jsonl. DATA SCIENCE!!!')
