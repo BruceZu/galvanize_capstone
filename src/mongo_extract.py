@@ -13,7 +13,6 @@ from selenium.common.exceptions import TimeoutException
 import codecs
 import json
 
-
 def write_json_file(obj, path):
     '''Dump an object and write it out as json to a file'''
     f = codecs.open(path, 'a', 'utf-8')
@@ -23,7 +22,16 @@ def write_json_file(obj, path):
     
     
 def soup_to_mongo(soup, collection_name):
-    '''There are 250 items in each soup object'''
+    '''Scrapes a single soup object retrived from a table for relevant bill information. 
+    It creates a dictionary for each row in the soup object and loads it into 
+    mongo database collection_name.  Note: Selenium has been timing out when trying to 
+    retrieve cosponsor information. Commented these lines out for the time being.
+    
+    Parameters: soup object
+                mongo database collection name
+    
+    Returns:    None
+    '''
     # table of bills are in ol class
     div = soup.find('div', {'class':'search-column-main'})
     table = div.find('ol')
@@ -45,7 +53,7 @@ def soup_to_mongo(soup, collection_name):
                 'sponsor_state': None,
                 'sponsor_district': None,  #senators don't have districts
                 'num_of_cosponsors': None,
-#                 'cosponsors_url': None,
+                'cosponsors_url': None,
                 'cosponsors': None,  #requires navigation to another url and extracting names from table
                 'committee': None, 
                 'bill_status': None,
@@ -68,60 +76,85 @@ def soup_to_mongo(soup, collection_name):
         columns = row.find_all('a')
         if columns[0].text.strip() != '':
             new_row['leg_id'] = columns[0].text.strip().replace('.', ' ')
-        if columns[0]['href'].strip() != '':
-            new_row['leg_url'] = columns[0]['href'].strip()
-        if columns[2].text.strip() != '':
-            new_row['num_of_cosponsors'] = columns[2].text.strip()
-            if new_row['num_of_cosponsors'] != '0':
-                # call function to get cosponsors table from url
-                cosponsors_url = columns[2]['href']
-                new_row['cosponsors'] = get_cosponsors(cosponsors_url)
+#             print('--------------')
+#             print(new_row['leg_id'])
 
-        # party, state, and district (for house reps) need to be stripped out of sponsor info
-        if columns[1].text.strip() != '':
-            rep = columns[1].text.strip()
-    #         print(rep)
-            new_row['sponsor'] = rep.rsplit('[', 1)[0][:-1]
-            party_dist = rep.rsplit('[', 1)[1][: -1]
-            party_dist_split = party_dist.split('-')
-            new_row['sponsor_state'] = party_dist_split[0]
-            new_row['sponsor_party'] = party_dist_split[1]
-            if len(party_dist_split) == 3:
-                new_row['sponsor_district'] = party_dist_split[2]
+ 
+        # reserved bill numbers will not have the information below
+        if (len(columns) > 2):    
+            if columns[0]['href'].strip() != '':
+                new_row['leg_url'] = columns[0]['href'].strip()
+            if columns[2].text.strip() != '':
+                new_row['num_of_cosponsors'] = columns[2].text.strip()
+                if new_row['num_of_cosponsors'] != '0':
+                    new_row['cosponsors_url'] = columns[2]['href']
+                    # call function to get cosponsors table from url
+                    # commented this line out for timout errors
+    #                 new_row['cosponsors'] = get_cosponsors(cosponsors_url)
 
-        # parse items within 'span' tag
-        columns = row.find_all('span')
-        if columns[0].text != '':
-            new_row['leg_type'] = columns[0].text.strip()
-        if columns[1].text.strip().split()[2] != '':
-            new_row['congress_id'] = columns[1].text.strip().split()[2]
-        if columns[2].text != '':
-            new_row['desc'] = columns[2].text
-        if columns[4].text.strip()[12:] != '':
-            new_row['committee'] = columns[4].text.strip()[12:]
-        # date was a little tricky
-        dt = columns[3].text.strip().split()
-        if '(Introduced' in dt:
-            new_row['intro_date'] = dt[dt.index('(Introduced') + 1][:-1]
 
-        # parse items within p tag
-        columns = row.find_all('p')
-        if columns[0].text.strip()[25:] != '':
-            new_row['bill_status'] = columns[0].text.strip()[25:]
+
+            # party, state, and district (for house reps) need to be stripped out of sponsor info
+            # Amendments have the rep in columns[2]
+            
+#         if columns[1].text.strip() != '':
+            for c in range(len(columns)):
+                if '[' in columns[c].text.strip():
+                    rep = columns[c].text.strip()
+                    new_row['sponsor'] = rep.rsplit('[', 1)[0][:-1]
+                    party_dist = rep.rsplit('[', 1)[1][: -1]
+                    party_dist_split = party_dist.split('-')
+                    new_row['sponsor_state'] = party_dist_split[0]
+                    new_row['sponsor_party'] = party_dist_split[1]
+                    if len(party_dist_split) == 3:
+                        new_row['sponsor_district'] = party_dist_split[2]
+
+            # parse items within 'span' tag
+            columns = row.find_all('span')
+            if columns[0].text != '':
+                new_row['leg_type'] = columns[0].text.strip()
+            if columns[1].text.strip().split()[2] != '':
+                new_row['congress_id'] = columns[1].text.strip().split()[2]
+            if columns[2].text != '':
+                new_row['desc'] = columns[2].text
+            if len(columns) > 4:
+                if ('Committee' in columns[4].text):
+                    new_row['committee'] = columns[4].text.strip()[12:]
+                
+                
+            # date was a little tricky... actually, a few things were after some trys
+            dt = columns[3].text.strip().split()
+            if '(Introduced' in dt:
+                new_row['intro_date'] = dt[dt.index('(Introduced') + 1][:-1]
+
+            # parse items within p tag for bill_status
+            # Amendments will not have a bill status
+            if 'Amdt' not in new_row['leg_id']:
+                columns = row.find_all('p')
+#                 print(columns)
+                if columns[0].text.strip()[25:] != '':
+                    new_row['bill_status'] = columns[0].text.strip()[25:]
 
 #         all_rows.append(new_row)
         collection_name.insert_one(new_row)
         
         i += 1
-        if i%20 == 0:
+        if i%50 == 0:
             print('\t\t{:.2f}% complete'.format(100 * i / len(rows)))
         
 #     return all_rows
 
 
-
+# this function really slows the data gathering process down... AND it's been timing out
 def get_cosponsors(site_url):
+    '''Scrapes site_url for list of cosponsors.
+    
+    Parameters: url
+    
+    Returns: list of dictionaries with cosponsor information 
+    '''
     url = site_url
+#     print(url)
 
     # send GET request using selenium (sites in javascript)
     option = webdriver.ChromeOptions()
@@ -168,7 +201,11 @@ def get_cosponsors(site_url):
         outpath = '../data/logs/cosponsor_errors.jsonl'
         write_json_file(outpath, output)
 
-        
+   
+
+  
+   
+
 if __name__ == '__main__':
     # Set up Mongo for raw data and prettified data
     client = MongoClient() # defaults to localhost
@@ -188,12 +225,15 @@ if __name__ == '__main__':
     x = 0
     
     for i in items:
+        soup = BeautifulSoup(i['lxml'], 'lxml')
+        
+        # keep track of what's in the queue before parsing it
         mongo_id = str(i['_id'])
         mongo_log = '../data/logs/mongo_updates.jsonl'
-        soup = BeautifulSoup(i['lxml'], 'lxml')
-        soup_to_mongo(soup, bill_details)
         write_json_file(mongo_id, mongo_log)
 
+        soup_to_mongo(soup, bill_details)
+
         x += 1
-        if x%10 == 0:
+        if x%20 == 0:
             print('Overall, {:.2f}% complete.'.format(100 * x / num_items))
