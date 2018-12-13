@@ -6,7 +6,16 @@ from pymongo import MongoClient
 import bson.json_util
 from bs4 import BeautifulSoup
 import requests
+import json
+import codecs
 
+
+def write_json_file(obj, path):
+    '''Dump an object and write it out as json to a file'''
+    f = codecs.open(path, 'a', 'utf-8')
+    json_record = json.dumps(obj, ensure_ascii = False)
+    f.write(json_record + '\n')
+    f.close
 
 
 def url_builder(record_url):
@@ -40,7 +49,9 @@ def get_bill_text(url):
     if stat_code != 200:
         print('_______________')
         print('_______________')
-        print('\t\tError in retrieving bill text from {}'.format(site_url))
+        print('')
+        print('\t{}'.format(site_url))
+        print('\t\tError in retrieving bill text.')
         print('\t\tRequest Status Code: {}'.format(stat_code))
         errored_line = {'url': site_url, 'error': stat_code}
         write_json_file(errored_line, '../data/logs/bill_text_errors.jsonl')
@@ -54,11 +65,14 @@ def get_bill_text(url):
         if soup.find('pre') is None:
             print('_______________')
             print('_______________')
-            print('\t\tError in retrieving bill text from {}'.format(site_url))
+            print('\t{}'.format(site_url))
+            print('\t\tError in retrieving bill text.')
             print('\t\tNo text available for scraping.')
             errored_line = {'url': site_url, 'error': 'no text available'}
             write_json_file(errored_line, '../data/logs/bill_text_errors.jsonl')
-            print('Error logged in ../data/logs/bill_text_errors.jsonl')
+            print('\t\tReturned None and error logged in ../data/logs/bill_text_errors.jsonl')
+            
+            return None
 
 
         # else scrape the text
@@ -66,7 +80,7 @@ def get_bill_text(url):
             bill_txt = soup.find('pre').text
             bill_txt = ' '.join(bill_txt.split())
 
-    return bill_txt
+            return bill_txt
 
 
 def update_mongo_body(txt, bill_issue, cong_id, collection):
@@ -89,6 +103,7 @@ def update_mongo_body(txt, bill_issue, cong_id, collection):
   
 
   
+
 if __name__ == '__main__':
     client = MongoClient() # defaults to localhost
     db = client.bills
@@ -100,16 +115,20 @@ if __name__ == '__main__':
     records_to_pop = bill_details.find({'leg_url': {'$regex': 'http'}, 'body': None})
     record_count = records_to_pop.count()
     print('--> Number of records with no text: {}'.format(record_count))
-
+    
+    
     i = 0
     for rec in records_to_pop:
+        # ignore concurrent resolution and simple resolution
+        if (rec['leg_type'] != 'CONCURRENT RESOLUTION') & (rec['leg_type'] != 'RESOLUTION'):
+            url = url_builder(rec['leg_url'])
+            # get bill text
+            bill_text = get_bill_text(url)
 
-        url = url_builder(rec['leg_url'])    
-        bill_text = get_bill_text(url)
-
-        bill_issue = rec['leg_id']
-        cong_id = rec['congress_id']
-        update_mongo_body(bill_text, bill_issue, cong_id, bill_details)
+            # update mongo record with bill text
+            bill_issue = rec['leg_id']
+            cong_id = rec['congress_id']
+            update_mongo_body(bill_text, bill_issue, cong_id, bill_details)
 
         i += 1
         if i%200 == 0:
