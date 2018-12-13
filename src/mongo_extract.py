@@ -211,7 +211,7 @@ if __name__ == '__main__':
     client = MongoClient() # defaults to localhost
     db = client.bills
 
-    # collection 'pages' is where the raw data is at
+    # collection 'pages' is where the raw html data is at
     # collection 'bill_details' is where the prettified data will go 
     pages = db.pages
 
