@@ -120,7 +120,7 @@ if __name__ == '__main__':
     i = 0
     for rec in records_to_pop:
         # ignore concurrent resolution and simple resolution
-        if (rec['leg_type'] != 'CONCURRENT RESOLUTION') & (rec['leg_type'] != 'RESOLUTION'):
+        if (rec['leg_type'] != 'CONCURRENT RESOLUTION') & (rec['leg_type'] != 'RESOLUTION') & (rec['leg_type'] != 'AMENDMENT'):
             url = url_builder(rec['leg_url'])
             # get bill text
             bill_text = get_bill_text(url)
