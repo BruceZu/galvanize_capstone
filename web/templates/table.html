@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Galvanize Capstone</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bootstrap example in Agile Data Science, 2.0">
+    <meta name="author" content="Russell Jurney">
+    <link href="/static/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/bootstrap-theme.min.css" rel="stylesheet">
+  </head>
+
+  <body>
+    <div id="wrap">
+
+      <!-- Begin page content -->
+      <div class="container">
+        <div class="page-header">
+          <h1>Galvanize Capstone</h1>
+        </div>
+        <p class="lead">Bill Details</p>
+        <table class="table">
+          <thead>
+              <th>Bill ID</th>
+              <th>Legislation Type</th>
+              <th>Sponsor</th>
+              <th>Status</th>
+              <th>Congress ID</th>
+              <th>Description</th>
+          </thead>
+          <tbody>
+            {% for row in rows -%}
+            <tr>
+              <td>{{row.leg_id}}</td>
+              <td>{{row.leg_type}}</td>
+              <td>{{row.sponsor}}</td>
+              <td>{{row.bill_status}}</td>
+              <td>{{row.congress_id}}</td>
+              <td>{{row.desc}}</td>
+            </tr>
+            {% endfor -%}
+          </tbody>
+        </table>
+      </div>
+
+      <div id="push"></div>
+    </div>
+
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">Template borrowed from <a href="http://shop.oreilly.com/product/0636920025054.do">Agile Data Science</a> by <a href="http://www.linkedin.com/in/russelljurney">Russell Jurney</a>, 2016
+      </div>
+    </div>
+    <script src="/static/bootstrap.min.js"></script>
+  </body>
+</html>
