@@ -110,26 +110,36 @@ if __name__ == '__main__':
     bill_details = db.bill_details
 
     # print out record counts
-    print('--> Number of records in database: {}'.format(bill_details.find().count()))
-
-    records_to_pop = bill_details.find({'leg_url': {'$regex': 'http'}, 'body': None})
-    record_count = records_to_pop.count()
-    print('--> Number of records with no text: {}'.format(record_count))
+    print('--------------------')
+    print('--------------------')
+    print('Number of records in database: {}'.format(bill_details.find().count()))
+    print('Ignoring RESOLUTIONS, CONCURRENT RESOLUTIONS, and AMENDMENTS for populating bills text.')
     
-    
-    i = 0
-    for rec in records_to_pop:
-        # ignore concurrent resolution and simple resolution
-        if (rec['leg_type'] != 'CONCURRENT RESOLUTION') & (rec['leg_type'] != 'RESOLUTION') & (rec['leg_type'] != 'AMENDMENT'):
-            url = url_builder(rec['leg_url'])
-            # get bill text
-            bill_text = get_bill_text(url)
+    # iterate through date range in reverse
+    date_range = range(1990, 2019)[::-1]
 
-            # update mongo record with bill text
-            bill_issue = rec['leg_id']
-            cong_id = rec['congress_id']
-            update_mongo_body(bill_text, bill_issue, cong_id, bill_details)
+    for d in date_range:
+        print('--------------------')
+        print('Cleaning up year {}'.format(d))
+        date_str = str(d)
+        records_to_pop = bill_details.find({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': date_str}, 'body': None})
+        record_count = records_to_pop.count()
+        print('--> Number of records with no text for year {}: {}'.format(d, record_count))
 
-        i += 1
-        if i%200 == 0:
-            print('{:.2f}% complete'.format(100 * i / record_count))
+
+        i = 0
+        for rec in records_to_pop:
+            # ignore concurrent resolution and simple resolution
+            if (rec['leg_type'] != 'CONCURRENT RESOLUTION') & (rec['leg_type'] != 'RESOLUTION') & (rec['leg_type'] != 'AMENDMENT'):
+                url = url_builder(rec['leg_url'])
+                # get bill text
+                bill_text = get_bill_text(url)
+
+                # update mongo record with bill text
+                bill_issue = rec['leg_id']
+                cong_id = rec['congress_id']
+                update_mongo_body(bill_text, bill_issue, cong_id, bill_details)
+
+            i += 1
+            if i%200 == 0:
+                print('\t{:.2f}% complete'.format(100 * i / record_count))
