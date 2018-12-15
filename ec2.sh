@@ -39,7 +39,7 @@ if [ -z "$GROUP_NAME_FILTER" ]
 then
   echo "Security group 'galvanize_capstone' not present ..." | tee -a $LOG_FILE
   echo "Creating security group 'galvanize_capstone' ..." | tee -a $LOG_FILE
-  aws ec2 create-security-group --group-name galvanize_capstone --description "Security group for the book, Agile Data Science 2.0" | tee -a $LOG_FILE
+  aws ec2 create-security-group --group-name galvanize_capstone --description "Security group my Galvanize Capstone project" | tee -a $LOG_FILE
   AUTHORIZE_22=true
 else
   echo "Security group 'galvanize_capstone' already exists, skipping creation ..." | tee -a $LOG_FILE
@@ -83,7 +83,8 @@ echo "The default region is '$DEFAULT_REGION'" | tee -a $LOG_FILE
 # Ubuntu 17.10 hvm:ebs-ssd
 # See https://cloud-images.ubuntu.com/locator/ec2/ if this needs fixing
 # echo "Determining the image ID to use according to region..." | tee -a $LOG_FILE
-UBUNTU_IMAGE_ID=ami-70873908
+UBUNTU_IMAGE_ID=ami-0bbe6b35405ecebdb
+# UBUNTU_IMAGE_ID=ami-70873908
 # case $DEFAULT_REGION in
 #   ap-south-1) UBUNTU_IMAGE_ID=ami-94e4b5fb
 #   ;;
