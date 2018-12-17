@@ -1,3 +1,6 @@
+import json
+import codecs
+
 import pandas as pd
 from pymongo import MongoClient
 
@@ -10,7 +13,42 @@ import string
 import re
 
 
-def get_data():
+
+
+def read_jsonl_file(path):
+    '''turn a jsonl file (carriage returns per record) into an array of objects'''
+    arr = []
+    f = codecs.open(path, 'r', 'utf-8')
+    for line in f:
+        record = json.loads(line.rstrip('\n|\r'))
+        arr.append(record)
+    return arr
+
+
+def read_json_file(path):
+    '''Turn a normal json file (no carriage returns per record) into an object'''
+    text = codecs.open(path, 'r', 'utf-8').read()
+    return json.loads(text)
+
+
+def write_jsonl_file(list_of_objects, path):
+    '''Dump a list of objects out as a jsonl file'''
+    f = codecs.open(path, 'w', 'utf-8')
+    for row in list_of_objects:
+        json_record = json.dumps(row, ensure_ascii = False)
+        f.write(json_record + '\n')
+    f.close()
+
+    
+def write_json_file(obj, path):
+    '''Dump an object and write it out as json to a file'''
+    f = codecs.open(path, 'a', 'utf-8')
+    json_record = json.dumps(obj, ensure_ascii = False)
+    f.write(json_record + '\n')
+    f.close
+    
+    
+def get_bill_data():
     '''
     Query data from mongo db bills.bill_details and return a pandas dataframe.
     
@@ -34,15 +72,20 @@ def get_data():
 
     # filter out simple resolutions, concurrent resolutions, and amendments (for prelim model)
     data = data[(data['leg_type'] != 'RESOLUTION') & (data['leg_type'] != 'CONCURRENT RESOLUTION') & (data['leg_type'] != 'AMENDMENT')]
+    
+    # create column for character counts of the bill text
+    bill_lengths = list(map(lambda x: len(x), data['body']))
+    data['bill_char_counts'] = bill_lengths
 
+    
     print('------------------')
-    print('Creating labels in column \'passed\'...')
+    print('Creating column \'labels\'...')
     
     # break up dataframe into those that became law and others (did not or still pending)
     became_law = data[(data['bill_status'] == 'Became Law') | (data['bill_status'] == 'Became Private Law')]
     others = data[(data['bill_status'] != 'Became Law') & (data['bill_status'] != 'Became Private Law')]
 
-    became_law.loc[:, 'passed'] = 1
+    became_law.loc[:, 'labels'] = 1
 
 
 
@@ -51,7 +94,7 @@ def get_data():
     current_cong = others[others['congress_id'] == '115th']
     prev_cong = others[others['congress_id'] != '115th']
 
-    prev_cong.loc[:, 'passed'] = 0
+    prev_cong.loc[:, 'labels'] = 0
 
 
 
@@ -59,7 +102,7 @@ def get_data():
     to_pres = current_cong[(current_cong['bill_status'] == 'To President') | (current_cong['bill_status'] == 'Resolving Differences')]
     on_floor = current_cong[(current_cong['bill_status'] != 'To President') & (current_cong['bill_status'] != 'Resolving Differences')]
 
-    to_pres.loc[:, 'passed'] = 1
+    to_pres.loc[:, 'labels'] = 1
 
 
 
@@ -67,7 +110,7 @@ def get_data():
     failed = on_floor[on_floor['bill_status'].str.startswith('Failed')]
     not_failed = on_floor[~on_floor['bill_status'].str.startswith('Failed')]
 
-    failed.loc[:, 'passed'] = 0
+    failed.loc[:, 'labels'] = 0
 
 
 
@@ -76,7 +119,7 @@ def get_data():
     introduced = not_failed[not_failed['bill_status'] == 'Introduced']
     beyond_intro = not_failed[not_failed['bill_status'] != 'Introduced']
 
-    introduced.loc[:, 'passed'] = 'in_progress'
+    introduced.loc[:, 'labels'] = 'in_progress'
 
 
 
@@ -85,7 +128,7 @@ def get_data():
     passed_opp_chamber = beyond_intro[(beyond_intro['bill_status'] == 'Passed House') & (beyond_intro['leg_id'].str.startswith('S')) | 
                               (beyond_intro['bill_status'] == 'Passed Senate') & (beyond_intro['leg_id'].str.startswith('H'))]
 
-    passed_opp_chamber.loc[:, 'passed'] = 1
+    passed_opp_chamber.loc[:, 'labels'] = 1
 
 
 
@@ -93,7 +136,7 @@ def get_data():
     in_orig_chamber = beyond_intro[(beyond_intro['bill_status'] == 'Passed House') & (beyond_intro['leg_id'].str.startswith('H')) | 
                               (beyond_intro['bill_status'] == 'Passed Senate') & (beyond_intro['leg_id'].str.startswith('S'))]    
 
-    in_orig_chamber.loc[:, 'passed'] = 'in_progress'
+    in_orig_chamber.loc[:, 'labels'] = 'in_progress'
 
 
 
@@ -101,7 +144,7 @@ def get_data():
     data_l = pd.concat([became_law, prev_cong, to_pres, failed, introduced, passed_opp_chamber, in_orig_chamber])
 
     # filter out those that are still in progress
-    df = data_l[data_l['passed'] != 'in_progress']
+    df = data_l[data_l['labels'] != 'in_progress']
 
     # filter for most recent congress_ids
     small_df = df[(df['congress_id'] == '115th') | 
@@ -120,7 +163,7 @@ def get_data():
 
 
 
-def process_corpus(df, corpus_col_name, label_col_name):
+def process_corpus(df, corpus_col_name, labels_col_name):
     '''
     Processes the text in df[corpus_col_name] to return a corpus (list) and the series of 
     corresponding labels in df[label_col_name].
@@ -140,6 +183,9 @@ def process_corpus(df, corpus_col_name, label_col_name):
 
     # remove numbers
     documents = list(map(lambda x: ' '.join(re.split('[,_\d]+', x)), documents))
+    
+    # clip the intro of each bill
+    documents = list(map(lambda x: x[(x.index('Office]') + 8):], documents))
 
     # tokenize the corpus
     print('------------------')
@@ -199,8 +245,6 @@ def process_corpus(df, corpus_col_name, label_col_name):
     print('------------------')
     print('NLP preprocessing complete ...')
 
-    print('------------------')
-    print('Creating train-test split and vectorizing ...')
     X = corpus
     y = df[labels_col_name].astype('int')
     
