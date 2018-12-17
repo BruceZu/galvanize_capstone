@@ -3,6 +3,7 @@ import codecs
 
 import pandas as pd
 from pymongo import MongoClient
+import datetime
 
 from nltk.tokenize import word_tokenize, wordpunct_tokenize, RegexpTokenizer
 from nltk.stem.snowball import SnowballStemmer
@@ -76,6 +77,9 @@ def get_bill_data():
     # create column for character counts of the bill text
     bill_lengths = list(map(lambda x: len(x), data['body']))
     data['bill_char_counts'] = bill_lengths
+    
+    #convert date column to type datetime
+    data['intro_date'] = data['intro_date'].apply(lambda x: datetime.datetime.strptime(x[:10], '%m/%d/%Y'))
 
     
     print('------------------')
