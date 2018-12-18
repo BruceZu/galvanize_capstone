@@ -1,5 +1,6 @@
 import json
 import codecs
+import copy
 
 import pandas as pd
 from pymongo import MongoClient
@@ -78,9 +79,25 @@ def get_bill_data():
     bill_lengths = list(map(lambda x: len(x), data['body']))
     data['bill_char_counts'] = bill_lengths
     
-    #convert date column to type datetime
+    # convert date column to type datetime
     data['intro_date'] = data['intro_date'].apply(lambda x: datetime.datetime.strptime(x[:10], '%m/%d/%Y'))
 
+    # strip out month from intro date
+    data['intro_month'] = data['intro_date'].apply(lambda x: x.month)
+    
+    # get session from year (odd years are Session 1, even years are Session 2)
+    data['session'] = data['congress_id'].apply(lambda x: 2 if int(x[:3])%2 == 0 else 1)
+    
+    # correction for mislabeled sponsor_state and sponsor_party
+    state = copy.copy(data['sponsor_state'])
+    party = copy.copy(data['sponsor_party'])
+    data['sponsor_state'] = party
+    data['sponsor_party'] = state
+
+    
+    
+    
+    
     
     print('------------------')
     print('Creating column \'labels\'...')
