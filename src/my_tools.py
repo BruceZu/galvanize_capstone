@@ -97,6 +97,9 @@ def get_bill_data():
                (data['num_of_cosponsors'] != 'TXT') &
                (data['num_of_cosponsors'] != 'All Actions')].copy()
     
+    # convert num_of_cosponsors to numeric
+    data['num_of_cosponsors'] = data['num_of_cosponsors'].apply(pd.to_numeric)
+    
     # correction for mislabeled sponsor_state and sponsor_party
     state = copy.copy(data['sponsor_state'])
     party = copy.copy(data['sponsor_party'])
@@ -134,21 +137,16 @@ def get_bill_data():
     data = pd.concat([d_0, d_1000, d_2000, d_3000, d_4000, d_5000, 
                       d_6000, d_7000, d_8000, d_9000, d_10000])
 
-    data = data.sort_index()
 
     
     
     
     # LABELING
-#     print('------------------')
-#     print('Creating column \'labels\'...')
-    
     # break up dataframe into those that became law and others (did not or still pending)
     became_law = data[(data['bill_status'] == 'Became Law') | (data['bill_status'] == 'Became Private Law')].copy()
     others = data[(data['bill_status'] != 'Became Law') & (data['bill_status'] != 'Became Private Law')].copy()
 
     became_law.loc[:, 'labels'] = 1
-#     print('became_law: {}'.format(became_law.shape))
 
 
 
@@ -158,7 +156,6 @@ def get_bill_data():
     prev_cong = others[others['congress_id'] != '115th'].copy()
 
     prev_cong.loc[:, 'labels'] = 0
-#     print('prev_cong: {}'.format(prev_cong.shape))
 
 
 
@@ -167,7 +164,6 @@ def get_bill_data():
     on_floor = current_cong[(current_cong['bill_status'] != 'To President') & (current_cong['bill_status'] != 'Resolving Differences')].copy()
 
     to_pres.loc[:, 'labels'] = 1
-#     print('to_pres: {}'.format(to_pres.shape))
 
 
     # break up bills on the floor to failed (0) and not failed
@@ -175,7 +171,6 @@ def get_bill_data():
     not_failed = on_floor[~on_floor['bill_status'].str.startswith('Failed')].copy()
 
     failed.loc[:, 'labels'] = 0
-#     print('failed: {}'.format(failed.shape))
 
 
 
@@ -185,7 +180,6 @@ def get_bill_data():
     beyond_intro = not_failed[not_failed['bill_status'] != 'Introduced'].copy()
 
     introduced.loc[:, 'labels'] = 'in_progress'
-#     print('introduced: {}'.format(introduced.shape))
 
 
 
@@ -195,7 +189,6 @@ def get_bill_data():
                               (beyond_intro['bill_status'] == 'Passed Senate') & (beyond_intro['leg_id'].str.startswith('H'))].copy()
 
     passed_opp_chamber.loc[:, 'labels'] = 1
-#     print('passed_opp_chamber: {}'.format(passed_opp_chamber.shape))
 
 
 
@@ -204,17 +197,16 @@ def get_bill_data():
                               (beyond_intro['bill_status'] == 'Passed Senate') & (beyond_intro['leg_id'].str.startswith('S'))].copy()
 
     in_orig_chamber.loc[:, 'labels'] = 'in_progress'
-#     print('in_orig_chamber: {}'.format(in_orig_chamber.shape))
 
 
 
     # bring all the information back together
     data_l = pd.concat([became_law, prev_cong, to_pres, failed, introduced, passed_opp_chamber, in_orig_chamber])
-#     print('data_l: {}'.format(data_l.shape))
+
 
     # filter out those that are still in progress
     df = data_l[data_l['labels'] != 'in_progress'].copy()
-#     print('df: {}'.format(df.shape))
+
 
     # filter for most recent congress_ids
     small_df = df[(df['congress_id'] == '115th') | 
@@ -223,7 +215,7 @@ def get_bill_data():
               (df['congress_id'] == '112th')| 
               (df['congress_id'] == '111th')| 
               (df['congress_id'] == '110th')].copy()
-#     print('small_df: {}'.format(small_df.shape))
+
     
     print('------------------')
     print('------------------')
@@ -231,9 +223,9 @@ def get_bill_data():
     print('Alter masking in my_tools.get_bill_data to get a different data set.')
     print('------------------')
     
-    small_df.reset_index(inplace = True)
-    
-    return small_df
+#     data = data.sort_index()
+
+    return small_df.reset_index(drop = True)
 
 
 
