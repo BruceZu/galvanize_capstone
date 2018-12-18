@@ -50,6 +50,7 @@ def write_json_file(obj, path):
     f.close
     
     
+
 def get_bill_data():
     '''
     Query data from mongo db bills.bill_details and return a pandas dataframe.
@@ -71,9 +72,12 @@ def get_bill_data():
     # need to execute query (.find) everytime i refer to it?
     records_with_text = bill_details.find({'body': {'$regex': 'e'}})
     data = pd.DataFrame(list(records_with_text))
-
+    
+    
+    
+    # DATA CLEANUP
     # filter out simple resolutions, concurrent resolutions, and amendments (for prelim model)
-    data = data[(data['leg_type'] != 'RESOLUTION') & (data['leg_type'] != 'CONCURRENT RESOLUTION') & (data['leg_type'] != 'AMENDMENT')]
+    data = data[(data['leg_type'] != 'RESOLUTION') & (data['leg_type'] != 'CONCURRENT RESOLUTION') & (data['leg_type'] != 'AMENDMENT')].copy()
     
     # create column for character counts of the bill text
     bill_lengths = list(map(lambda x: len(x), data['body']))
@@ -88,84 +92,129 @@ def get_bill_data():
     # get session from year (odd years are Session 1, even years are Session 2)
     data['session'] = data['congress_id'].apply(lambda x: 2 if int(x[:3])%2 == 0 else 1)
     
+    # filter out non-numeric num_of_cosponsors: S. Rept. 110-184, TXT, All Actions
+    data = data[(data['num_of_cosponsors'] != 'S. Rept. 110-184') &
+               (data['num_of_cosponsors'] != 'TXT') &
+               (data['num_of_cosponsors'] != 'All Actions')].copy()
+    
     # correction for mislabeled sponsor_state and sponsor_party
     state = copy.copy(data['sponsor_state'])
     party = copy.copy(data['sponsor_party'])
     data['sponsor_state'] = party
     data['sponsor_party'] = state
+    
+    # create column for getting char_counts into buckets
+    data['char_count_bucket'] = None
+
+    d_0 = data[data['bill_char_counts'] <= 1000].copy()
+    d_1000 = data[(data['bill_char_counts'] > 1000) & (data['bill_char_counts'] <= 2000)].copy()
+    d_2000 = data[(data['bill_char_counts'] > 2000) & (data['bill_char_counts'] <= 3000)].copy()
+    d_3000 = data[(data['bill_char_counts'] > 3000) & (data['bill_char_counts'] <= 4000)].copy()
+    d_4000 = data[(data['bill_char_counts'] > 4000) & (data['bill_char_counts'] <= 5000)].copy()
+    d_5000 = data[(data['bill_char_counts'] > 5000) & (data['bill_char_counts'] <= 6000)].copy()
+    d_6000 = data[(data['bill_char_counts'] > 6000) & (data['bill_char_counts'] <= 7000)].copy()
+    d_7000 = data[(data['bill_char_counts'] > 7000) & (data['bill_char_counts'] <= 8000)].copy()
+    d_8000 = data[(data['bill_char_counts'] > 8000) & (data['bill_char_counts'] <= 9000)].copy()
+    d_9000 = data[(data['bill_char_counts'] > 9000) & (data['bill_char_counts'] <= 10000)].copy()
+    d_10000 = data[data['bill_char_counts'] > 10000].copy()
+
+
+    d_0['char_count_bucket'] = 'less than 1000'
+    d_1000['char_count_bucket'] = '1001 - 2000'
+    d_2000['char_count_bucket'] = '2001 - 3000'
+    d_3000['char_count_bucket'] = '3001 - 4000'
+    d_4000['char_count_bucket'] = '4001 - 5000'
+    d_5000['char_count_bucket'] = '5001 - 6000'
+    d_6000['char_count_bucket'] = '6001 - 7000'
+    d_7000['char_count_bucket'] = '7001 - 8000'
+    d_8000['char_count_bucket'] = '8001 - 9000'
+    d_9000['char_count_bucket'] = '9001 - 10000'
+    d_10000['char_count_bucket'] = 'greater than 10000'
+
+    data = pd.concat([d_0, d_1000, d_2000, d_3000, d_4000, d_5000, 
+                      d_6000, d_7000, d_8000, d_9000, d_10000])
+
+    data = data.sort_index()
 
     
     
     
-    
-    
-    print('------------------')
-    print('Creating column \'labels\'...')
+    # LABELING
+#     print('------------------')
+#     print('Creating column \'labels\'...')
     
     # break up dataframe into those that became law and others (did not or still pending)
-    became_law = data[(data['bill_status'] == 'Became Law') | (data['bill_status'] == 'Became Private Law')]
-    others = data[(data['bill_status'] != 'Became Law') & (data['bill_status'] != 'Became Private Law')]
+    became_law = data[(data['bill_status'] == 'Became Law') | (data['bill_status'] == 'Became Private Law')].copy()
+    others = data[(data['bill_status'] != 'Became Law') & (data['bill_status'] != 'Became Private Law')].copy()
 
     became_law.loc[:, 'labels'] = 1
+#     print('became_law: {}'.format(became_law.shape))
 
 
 
     # break up others into current congress and previous ones. Anything that hasn't been signed into law
     # before current session is dead. Currently, all bills vetoed by the president come from previous congresses
-    current_cong = others[others['congress_id'] == '115th']
-    prev_cong = others[others['congress_id'] != '115th']
+    current_cong = others[others['congress_id'] == '115th'].copy()
+    prev_cong = others[others['congress_id'] != '115th'].copy()
 
     prev_cong.loc[:, 'labels'] = 0
+#     print('prev_cong: {}'.format(prev_cong.shape))
 
 
 
     # let's label To President and Resolving Differences with 1. Everything else is on the floor
-    to_pres = current_cong[(current_cong['bill_status'] == 'To President') | (current_cong['bill_status'] == 'Resolving Differences')]
-    on_floor = current_cong[(current_cong['bill_status'] != 'To President') & (current_cong['bill_status'] != 'Resolving Differences')]
+    to_pres = current_cong[(current_cong['bill_status'] == 'To President') | (current_cong['bill_status'] == 'Resolving Differences')].copy()
+    on_floor = current_cong[(current_cong['bill_status'] != 'To President') & (current_cong['bill_status'] != 'Resolving Differences')].copy()
 
     to_pres.loc[:, 'labels'] = 1
-
+#     print('to_pres: {}'.format(to_pres.shape))
 
 
     # break up bills on the floor to failed (0) and not failed
-    failed = on_floor[on_floor['bill_status'].str.startswith('Failed')]
-    not_failed = on_floor[~on_floor['bill_status'].str.startswith('Failed')]
+    failed = on_floor[on_floor['bill_status'].str.startswith('Failed')].copy()
+    not_failed = on_floor[~on_floor['bill_status'].str.startswith('Failed')].copy()
 
     failed.loc[:, 'labels'] = 0
+#     print('failed: {}'.format(failed.shape))
 
 
 
     # bills that haven't failed yet have either been just introduced or on their way
     # label introduced with 'in_progress'. These will not be a part of our model.
-    introduced = not_failed[not_failed['bill_status'] == 'Introduced']
-    beyond_intro = not_failed[not_failed['bill_status'] != 'Introduced']
+    introduced = not_failed[not_failed['bill_status'] == 'Introduced'].copy()
+    beyond_intro = not_failed[not_failed['bill_status'] != 'Introduced'].copy()
 
     introduced.loc[:, 'labels'] = 'in_progress'
+#     print('introduced: {}'.format(introduced.shape))
 
 
 
     # there are bills that started in one chamber and have already passed the other. We'll label
     # these with a 1
     passed_opp_chamber = beyond_intro[(beyond_intro['bill_status'] == 'Passed House') & (beyond_intro['leg_id'].str.startswith('S')) | 
-                              (beyond_intro['bill_status'] == 'Passed Senate') & (beyond_intro['leg_id'].str.startswith('H'))]
+                              (beyond_intro['bill_status'] == 'Passed Senate') & (beyond_intro['leg_id'].str.startswith('H'))].copy()
 
     passed_opp_chamber.loc[:, 'labels'] = 1
+#     print('passed_opp_chamber: {}'.format(passed_opp_chamber.shape))
 
 
 
     # bills that are still in the chamber they were introduced in are 'in_progress'
     in_orig_chamber = beyond_intro[(beyond_intro['bill_status'] == 'Passed House') & (beyond_intro['leg_id'].str.startswith('H')) | 
-                              (beyond_intro['bill_status'] == 'Passed Senate') & (beyond_intro['leg_id'].str.startswith('S'))]    
+                              (beyond_intro['bill_status'] == 'Passed Senate') & (beyond_intro['leg_id'].str.startswith('S'))].copy()
 
     in_orig_chamber.loc[:, 'labels'] = 'in_progress'
+#     print('in_orig_chamber: {}'.format(in_orig_chamber.shape))
 
 
 
     # bring all the information back together
     data_l = pd.concat([became_law, prev_cong, to_pres, failed, introduced, passed_opp_chamber, in_orig_chamber])
+#     print('data_l: {}'.format(data_l.shape))
 
     # filter out those that are still in progress
-    df = data_l[data_l['labels'] != 'in_progress']
+    df = data_l[data_l['labels'] != 'in_progress'].copy()
+#     print('df: {}'.format(df.shape))
 
     # filter for most recent congress_ids
     small_df = df[(df['congress_id'] == '115th') | 
@@ -173,12 +222,16 @@ def get_bill_data():
               (df['congress_id'] == '113th')| 
               (df['congress_id'] == '112th')| 
               (df['congress_id'] == '111th')| 
-              (df['congress_id'] == '110th')]
+              (df['congress_id'] == '110th')].copy()
+#     print('small_df: {}'.format(small_df.shape))
     
     print('------------------')
     print('------------------')
     print('Data is from the 110th Congress (2007) to present')
+    print('Alter masking in my_tools.get_bill_data to get a different data set.')
     print('------------------')
+    
+    small_df.reset_index(inplace = True)
     
     return small_df
 
