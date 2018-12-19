@@ -1,6 +1,7 @@
 import json
 import codecs
 import copy
+import numpy as np
 
 import pandas as pd
 from pymongo import MongoClient
@@ -13,6 +14,12 @@ from nltk.corpus import stopwords
 from nltk.util import ngrams, skipgrams
 import string
 import re
+
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, auc
+from scipy import interp
+from sklearn.model_selection import KFold
+from sklearn.preprocessing import StandardScaler
 
 
 
@@ -222,9 +229,8 @@ def get_bill_data():
     print('Data is from the 110th Congress (2007) to present')
     print('Alter masking in my_tools.get_bill_data to get a different data set.')
     print('------------------')
-    
-#     data = data.sort_index()
 
+    
     return small_df.reset_index(drop = True)
 
 
@@ -315,3 +321,41 @@ def process_corpus(df, corpus_col_name, labels_col_name):
     y = df[labels_col_name].astype('int')
     
     return X, y
+
+
+
+def plot_roc(X, y, clf_class, plot_name, **kwargs):
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)
+    n_splits=5
+    kf = KFold(n_splits=n_splits, shuffle=True)
+    y_prob = np.zeros((len(y),2))
+    mean_tpr = 0.0
+    mean_fpr = np.linspace(0, 1, 100)
+    all_tpr = []
+    for i, (train_index, test_index) in enumerate(kf.split(X)):
+        X_train, X_test = X[train_index], X[test_index]
+        y_train = y[train_index]
+        clf = clf_class(**kwargs)
+        clf.fit(X_train,y_train)
+        # Predict probabilities, not classes
+        y_prob[test_index] = clf.predict_proba(X_test)
+        fpr, tpr, thresholds = roc_curve(y[test_index], y_prob[test_index, 1])
+        mean_tpr += interp(mean_fpr, fpr, tpr)
+        mean_tpr[0] = 0.0
+        roc_auc = auc(fpr, tpr)
+        plt.plot(fpr, tpr, lw=1, label='ROC fold %d (area = %0.2f)' % (i, roc_auc))
+    mean_tpr /= n_splits
+    mean_tpr[-1] = 1.0
+    mean_auc = auc(mean_fpr, mean_tpr)
+    plt.plot(mean_fpr, mean_tpr, 'k--',label='Mean ROC (area = %0.2f)' % mean_auc, lw=2)
+    
+    plt.plot([0, 1], [0, 1], '--', color=(0.6, 0.6, 0.6), label='Random')
+    plt.xlim([-0.05, 1.05])
+    plt.ylim([-0.05, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic')
+    plt.legend(loc="lower right")
+    plt.savefig('17_' + plot_name + '.png')
+    plt.close()
