@@ -7,6 +7,10 @@ import pandas as pd
 from pymongo import MongoClient
 import datetime
 
+import nltk
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
 from nltk.tokenize import word_tokenize, wordpunct_tokenize, RegexpTokenizer
 from nltk.stem.snowball import SnowballStemmer
 from nltk.stem.wordnet  import WordNetLemmatizer
@@ -226,7 +230,7 @@ def get_bill_data():
     
     print('------------------')
     print('------------------')
-    print('Data is from the 110th Congress (2007) to present')
+    print('Data is that with text from the 110th Congress (2007) to present')
     print('Alter masking in my_tools.get_bill_data to get a different data set.')
     print('------------------')
 
@@ -235,7 +239,7 @@ def get_bill_data():
 
 
 
-def process_corpus(df, corpus_col_name, labels_col_name):
+def process_corpus(df, corpus_col_name):
     '''
     Processes the text in df[corpus_col_name] to return a corpus (list) and the series of 
     corresponding labels in df[label_col_name].
@@ -243,10 +247,10 @@ def process_corpus(df, corpus_col_name, labels_col_name):
     The intent of this function is to feed the output into a stratified train-test split.
     -------------------
     Parameters: df - pandas dataframe
-                col_name - name of column in df that contains the text to be processed.
+                corpus_col_name - name of column in df that contains the text to be processed.
     -------------------
     Returns: X - a list of documents
-             y - a pandas series of corresponding labels
+             y - a pandas series of corresponding labels as int
     '''
     # create a corpus
     print('------------------')
@@ -318,7 +322,7 @@ def process_corpus(df, corpus_col_name, labels_col_name):
     print('NLP preprocessing complete ...')
 
     X = corpus
-    y = df[labels_col_name].astype('int')
+    y = df['labels'].astype('int')
     
     return X, y
 
