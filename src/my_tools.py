@@ -8,9 +8,9 @@ from pymongo import MongoClient
 import datetime
 
 import nltk
-nltk.download('punkt')
-nltk.download('stopwords')
-nltk.download('wordnet')
+# nltk.download('punkt')
+# nltk.download('stopwords')
+# nltk.download('wordnet')
 from nltk.tokenize import word_tokenize, wordpunct_tokenize, RegexpTokenizer
 from nltk.stem.snowball import SnowballStemmer
 from nltk.stem.wordnet  import WordNetLemmatizer
