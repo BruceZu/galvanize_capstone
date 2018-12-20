@@ -7,5 +7,6 @@ This project is an attempt to predict whether a bill or a joint resolution will 
 These counts exclude simple and concurrent resolutions, neither of which have the force of law upon passage. Check out [Legislation, Laws, and Acts](https://www.senate.gov/legislative/common/briefing/leg_laws_acts.htm) for definitions and examples.
 
 ## Approach
+Publicly available data was scraped using 
 
 ## Tools 
