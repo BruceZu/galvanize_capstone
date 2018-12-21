@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+{% block body %}
+  <div>
+    <p class="lead">Bill {{bill.leg_id}}</p>
+    <table class="table">
+      <thead>
+        <th>Bill ID</th>
+        <th>Date Introduced</th>
+        <th>Sponsor</th>
+        <th>Status</th>
+        <th>Congress ID</th>
+        <th>Description</th>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{bill.leg_id}}</td>
+          <td>{{bill.intro_date}}</td>
+          <td>{{bill.sponsor}}</td>
+          <td>{{bill.bill_status}}</td>
+          <td>{{bill.congress_id}}</td>
+          <td>{{bill.desc}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+{% endblock %}
