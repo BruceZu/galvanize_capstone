@@ -18,11 +18,11 @@
         <div class="page-header">
           <h1>Galvanize Capstone</h1>
         </div>
-        <p class="lead">Bill Details</p>
+        <p class="lead">Bill Summaries</p>
         <table class="table">
           <thead>
               <th>Bill ID</th>
-              <th>Legislation Type</th>
+              <th>Date Introduced</th>
               <th>Sponsor</th>
               <th>Status</th>
               <th>Congress ID</th>
@@ -32,7 +32,7 @@
             {% for row in rows -%}
             <tr>
               <td>{{row.leg_id}}</td>
-              <td>{{row.leg_type}}</td>
+              <td>{{row.intro_date}}</td>
               <td>{{row.sponsor}}</td>
               <td>{{row.bill_status}}</td>
               <td>{{row.congress_id}}</td>
@@ -48,7 +48,7 @@
 
     <div id="footer">
       <div class="container">
-        <p class="muted credit">Template borrowed from <a href="http://shop.oreilly.com/product/0636920025054.do">Agile Data Science</a> by <a href="http://www.linkedin.com/in/russelljurney">Russell Jurney</a>, 2016
+	      <p class="muted credit">Information scraped from <a href="https://www.congress.gov/search?q=%7B%22source%22%3A%22legislation%22%7D">Congress.gov</a> by <a href="https://github.com/magdiel85281/galvanize_capstone">Magdiel Delgadillo</a>, 2018
       </div>
     </div>
     <script src="/static/bootstrap.min.js"></script>

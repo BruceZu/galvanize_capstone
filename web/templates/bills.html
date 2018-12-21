@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block body %}
+  <div>
+    <p class="lead">{{bill_count}} Bills Originating from the {{origin}} in the 115th Congress</p>
+    <table class="table table-condensed table-striped">
+      <thead>
+        <th>Bill ID</th>
+        <th>Date Introduced</th>
+        <th>Sponsor</th>
+        <th>Status</th>
+        <th>Congress ID</th>
+        <th>Description</th>
+      </thead>
+      <tbody>
+        {% for bill in bills %}
+        <tr>
+	  <td><a href="/bill_info?leg_id={{bill.leg_id}}&congress_id={{bill.congress_id}}">{{bill.leg_id}}</a></td>
+          <td>{{bill.intro_date}}</td>
+          <td>{{bill.sponsor}}</td>
+          <td>{{bill.bill_status}}</td>
+          <td>{{bill.congress_id}}</td>
+          <td>{{bill.desc}}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if nav_offsets and nav_path -%}
+    {{ common.display_nav(nav_offsets, nav_path, bill_count, query)|safe }}
+  {% endif -%}
+{% endblock %}
