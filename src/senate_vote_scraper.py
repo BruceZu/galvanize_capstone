@@ -135,7 +135,6 @@ def get_vote_results(cong_id, session, vote_id):
     url_root = 'https://www.senate.gov/legislative/LIS/roll_call_lists/roll_call_vote_cfm.cfm?'
     url_tail = 'congress={}&session={}&vote={}'.format(cong_id, session, vote_id_ext)
     site_url = '{}{}'.format(url_root, url_tail)
-    print(site_url)
     
     sleep_time = randint(0, 5)
     sleep(sleep_time)
