@@ -190,7 +190,8 @@ def get_vote_results(cong_id, session, vote_id):
     
     
 if __name__ == '__main__':
-    cong_ids = range(101, 116)
+#     cong_ids = range(101, 116)
+    cong_ids = range(113, 116)
     for cong_id in cong_ids[::-1]:
         for session in range(1, 3):
             print('Getting vote data for the Congress ID {}, Session {}'.format(cong_id, session))
