@@ -23,10 +23,9 @@ def get_session_summaries(cong_id, session):
 
     site_url = '{}_{}_{}.htm'.format(root_url, cong_id, session)
 
+    req = requests.get(site_url)
     sleep_time = randint(0, 5)
     sleep(sleep_time)
-    
-    req = requests.get(site_url)
     tstamp = datetime.datetime.now().strftime('%m-%d-%Y %H:%M:%S')
     stat_code = req.status_code
     if stat_code != 200:
@@ -69,8 +68,12 @@ def append_rows_to_file(cong_id, session, rows, filename):
         yr = s2_congid_dict[cong_id]
     else:
         yr = s1_congid_dict[cong_id]
-    
-
+        
+        
+    # initilize Mongo client to check whether data already in db
+    client = MongoClient()
+    db = client.bills
+    senate_votes = db.senate_votes
     
     # create an empty row to append to all_records with info filled in
     empty_row = {
@@ -94,7 +97,7 @@ def append_rows_to_file(cong_id, session, rows, filename):
 
             if ((leg_id.startswith('S. ')) | 
                 (leg_id.startswith('S.J.Res')) | 
-                (leg_id.startswith('H.R ')) |  
+                (leg_id.startswith('H.R. ')) |  
                 (leg_id.startswith('H.J.Res'))):
                 leg_id = leg_id.replace('.', ' ').replace('  ', ' ').upper().strip()
 #                 print('---------')
@@ -115,8 +118,17 @@ def append_rows_to_file(cong_id, session, rows, filename):
                 new_row['year'] = yr
                 new_row['vote_results'] = get_vote_results(cong_id, session, new_row['vote_id'])
 
-
                 write_json_file(new_row, filename)
+                senate_votes.insert_one(new_row)
+                
+                #check to see if data in Mongo
+                if senate_votes.find_one({'congress_id': int(cong_id), 'session': int(session), 'vote_id': new_row['vote_id']}) is None:
+                    print('\tNew data found for Congress {}, Session {}, Vote ID {}'.format(cong_id, session, new_row['vote_id']))
+                else: 
+                    print('\Confirmed: data wrangled for Congress {}, Session {}, Vote ID {}'.format(cong_id, session, new_row['vote_id']))
+                
+                
+                
 
 
 def get_vote_results(cong_id, session, vote_id):
@@ -136,10 +148,10 @@ def get_vote_results(cong_id, session, vote_id):
     url_tail = 'congress={}&session={}&vote={}'.format(cong_id, session, vote_id_ext)
     site_url = '{}{}'.format(url_root, url_tail)
     
+    req = requests.get(site_url)
     sleep_time = randint(0, 5)
     sleep(sleep_time)
 
-    req = requests.get(site_url)
     tstamp = datetime.datetime.now().strftime('%m-%d-%Y %H:%M:%S')
     stat_code = req.status_code
 
@@ -151,8 +163,10 @@ def get_vote_results(cong_id, session, vote_id):
     if stat_code != 200:
         print('_______________')
         print('_______________')
-        print('\t\tError in retrieving vote results for {}'.format(site_url))
+        print('\t\tError in retrieving vote results for Congress {}, Session {}, Vote Id {}'.format(cong_id, session, vote_id))
         print('\t\tRequest Status Code: {}, {}'.format(stat_code, tstamp))
+        
+    
 
     if stat_code == 200:
         # use BeautifulSoup to find the data we need.
@@ -191,7 +205,7 @@ def get_vote_results(cong_id, session, vote_id):
     
 if __name__ == '__main__':
 #     cong_ids = range(101, 116)
-    cong_ids = range(113, 116)
+    cong_ids = range(101, 112)
     for cong_id in cong_ids[::-1]:
         for session in range(1, 3):
             print('Getting vote data for the Congress ID {}, Session {}'.format(cong_id, session))
