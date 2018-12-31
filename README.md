@@ -31,7 +31,9 @@ To begin, general information from bills and joint resolutions were scraped from
 
 ![Legislation Search Page](img/legislation_search.png)
 
-From these pages, most fields and url links for each piece of legislation was scraped and dumped into a Mongo database for analysis. This data was then pulled from Mongo to scrape additional bill details - such as the bill text, the number of amendments, and cosponsor information - from the urls stored.
+From these pages, most fields and url links for each piece of legislation were scraped and dumped into a Mongo database for analysis. Since there were almost 450 web pages to be scraped, four processes were threaded and joined to gather this data quickly. 
+
+Once in Mongo, this data was then pulled to scrape additional bill details - such as the bill text, the number of amendments, and cosponsor information - from the urls stored.
 
 
 ### Step 2: Modeling
