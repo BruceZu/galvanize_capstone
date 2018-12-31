@@ -23,10 +23,10 @@ Once it was felt that a process (i.e. web scraping) was working with relatively 
 Python was used to scrape the initial data from [congress.gov](https://www.congress.gov/search?q={%22source%22:%22legislation%22}&pageSize=250) using the Requests and BeautifulSoup packages. The data collected was put into json lines format and stored into a collections in a Mongo database. 
 
 
+
 ## The Process
 
 ### Step 1: Data Wrangling
-
 To begin, general information from bills and joint resolutions were scraped from the Legislation search pages on [congress.gov](https://www.congress.gov/search?q={%22source%22:%22legislation%22}&pageSize=250). 
 
 ![Legislation Search Page](img/legislation_search.png)
@@ -35,6 +35,10 @@ From these pages, most fields and url links for each piece of legislation were s
 
 Once in Mongo, this data was then pulled to scrape additional bill details - such as the bill text, the number of amendments, and cosponsor information - from the urls stored.
 
+### Step 2: Labeling
+The process for labeling mirrored the [process](https://www.usa.gov/how-laws-are-made) that a bill must undergo to become law. For this project, if a bill or joint resolution gathered enough votes to pass both the Senate and the House of Representatives, it was labeled as 'passed', or '1'. If it failed in one chamber, failed in committee, or never got voted on by the end of the legislative session, it was labeled as 'not passed', or '0'. Those remaining were deemed 'in progress' and labeled with a 'null'.
+
+![Labeling](img/Labeling.png)
 
 ### Step 2: Modeling
 
