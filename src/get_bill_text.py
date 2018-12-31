@@ -11,6 +11,7 @@ from time import sleep
 
 from my_tools import write_json_file
 
+
 def url_builder(record_url):
     '''
     Builds endpoint url from leg_url in mongo. Endpoint url should be the site that 
@@ -30,10 +31,10 @@ def get_bill_text(site_url):
     
     Parameters: url
     
-    Returns: bill text, if it exists
+    Returns:    bill text, if it exists
     '''
     # included sleep time to mimick human user 
-    sleep_time = randint(0, 11)
+    sleep_time = randint(2, 11)
     sleep(sleep_time)
 
     req = requests.get(site_url)
@@ -60,11 +61,9 @@ def get_bill_text(site_url):
             print('_______________')
             print('_______________')
             print('\t{}'.format(site_url))
-            print('\t\tError in retrieving bill text.')
-            print('\t\tNo text available for scraping.')
-            errored_line = {'url': site_url, 'error': 'no text available'}
+            print('\t\tNo text available for scraping. Logging...')
+            errored_line = {'url': site_url, 'error': 'no text available', 'process': 'bill text'}
             write_json_file(errored_line, '../data/logs/bill_text_errors.jsonl')
-            print('\t\tReturned None and error logged in ../data/logs/bill_text_errors.jsonl')
             
             return None
 
@@ -77,7 +76,7 @@ def get_bill_text(site_url):
             return bill_txt
 
 
-def update_mongo_body(txt, bill_issue, cong_id, collection):  #this function is missing session 
+def update_mongo_body(txt, bill_issue, cong_id, collection):  
     '''
     Updates the body field in the mongo record specified by bill_issue (leg_id) and
     cong_id (congress_id) from db.collection with txt.
@@ -87,29 +86,27 @@ def update_mongo_body(txt, bill_issue, cong_id, collection):  #this function is 
                 cong_id - value to filter on for key congress_id
                 collection - the name of the mongo collection
                 
-    Returns: None
+    Returns:    None
     '''
-    
     collection.update_one({'leg_id': bill_issue, 'congress_id': cong_id}, {'$set': {'body': txt}})
-  
 
-def initiate_process(year):
+
+def initiate_process(year, collection):
     '''
-    Initiates process from threads
+    Initiates process from threads.
     '''
-    client = MongoClient() # defaults to localhost
-    db = client.bills
-    bill_info = db.bill_info
+#     client = MongoClient() # defaults to localhost
+#     db = client.bills
+#     bill_info = db.bill_info
 
     print('--------------------')
     print('Cleaning up year {}'.format(year))
     year_str = str(year)
-    records_to_populate = bill_info.find({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}, 'body': None})
-    record_count = records_to_populate.count()
+    records_to_populate = collection.find({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}, 'body': None})
+    record_count = collection.count_documents({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}, 'body': None})
     print('--> Number of records with no text for year {}: {}'.format(year, record_count))
     
     if record_count > 0:
-        i = 0
         for rec in records_to_populate:
             # get complete url using url_builder
             url = url_builder(rec['leg_url'])
@@ -119,32 +116,42 @@ def initiate_process(year):
             # update mongo record with bill text
             bill_issue = rec['leg_id']
             cong_id = rec['congress_id']
-            update_mongo_body(bill_text, bill_issue, cong_id, bill_info)
+            update_mongo_body(bill_text, bill_issue, cong_id, collection)
 
-            if i%100 == 0:
-                print('\tYear {} {:.2f}% complete'.format(year, 100 * i / record_count))
-            i += 1
-
-
+            
+            r = collection.count_documents({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}, 'body': None})
+            if r%100 == 0:
+                print('+++++++++')
+                print('Year {}: {} records remaining with no text'.format(year, r))
+                print('+++++++++')
+    
                 
-                
-if __name__ == '__main__':        
+if __name__ == '__main__':
+    print('This script is populating bill text into Mongo four years at a time for those records without any text.')
+    client = MongoClient() # defaults to localhost
+    db = client.bills
+    bill_info = db.bill_info
+
     # iterate through date range in reverse
     year_range = range(2007, 2019)[::-1]
 
     for y in year_range[::3]:
-        t1 = threading.Thread(target=initiate_process, args=[y])
-        t2 = threading.Thread(target=initiate_process, args=[y+1])
-        t3 = threading.Thread(target=initiate_process, args=[y+2])
+        t1 = threading.Thread(target=initiate_process, args=[y, bill_info])
+        t2 = threading.Thread(target=initiate_process, args=[y-1, bill_info])
+        t3 = threading.Thread(target=initiate_process, args=[y-2, bill_info])
+        t4 = threading.Thread(target=initiate_process, args=[y-3, bill_info])
         
         t1.start()
         t2.start()
         t3.start()
+        t4.start()
 
         t1.join()
         t2.join()
         t3.join()
+        t4.join()
         
     print('-----------')
     print('-----------')
     print('Bill text populating complete!... DATA SCIENCE!!!')
+    
