@@ -34,7 +34,7 @@ def get_bill_text(site_url):
     Returns:    bill text, if it exists
     '''
     # included sleep time to mimick human user 
-    sleep_time = randint(2, 11)
+    sleep_time = randint(2, 6)
     sleep(sleep_time)
 
     req = requests.get(site_url)
@@ -127,7 +127,7 @@ def initiate_process(year, collection):
     
                 
 if __name__ == '__main__':
-    print('This script is populating bill text into Mongo four years at a time for those records without any text.')
+    print('This script is populating bill text into Mongo threading four years at a time for those records without any text.')
     client = MongoClient() # defaults to localhost
     db = client.bills
     bill_info = db.bill_info
