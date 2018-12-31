@@ -33,7 +33,7 @@ def get_bill_text(site_url):
     Returns: bill text, if it exists
     '''
     # included sleep time to mimick human user 
-    sleep_time = randint(0, 16)
+    sleep_time = randint(0, 11)
     sleep(sleep_time)
 
     req = requests.get(site_url)
@@ -121,9 +121,9 @@ def initiate_process(year):
             cong_id = rec['congress_id']
             update_mongo_body(bill_text, bill_issue, cong_id, bill_info)
 
+            if i%100 == 0:
+                print('\tYear {} {:.2f}% complete'.format(year, 100 * i / record_count))
             i += 1
-            if i%200 == 0:
-                print('\t{:.2f}% complete'.format(100 * i / record_count))
 
 
                 
