@@ -34,7 +34,7 @@ def get_bill_text(site_url):
     Returns:    bill text, if it exists
     '''
     # included sleep time to mimick human user 
-    sleep_time = randint(2, 6)
+    sleep_time = randint(2, 5)
     sleep(sleep_time)
 
     req = requests.get(site_url)
@@ -135,7 +135,7 @@ if __name__ == '__main__':
     # iterate through date range in reverse
     year_range = range(2007, 2019)[::-1]
 
-    for y in year_range[::3]:
+    for y in year_range[::4]:
         t1 = threading.Thread(target=initiate_process, args=[y, bill_info])
         t2 = threading.Thread(target=initiate_process, args=[y-1, bill_info])
         t3 = threading.Thread(target=initiate_process, args=[y-2, bill_info])
