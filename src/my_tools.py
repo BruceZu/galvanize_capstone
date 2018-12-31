@@ -61,6 +61,15 @@ def write_json_file(obj, path):
     f.close
     
     
+def collection_to_df(collection):
+    '''
+    Returns a dataframe from a mongo collection.
+    '''
+    data = pd.DataFrame
+    for i in range(collection.count()):
+        data = data.append(pd.DataFrame.from_dict(collection[i], orient='index').T, ignore_index=True)
+    return data
+
 
 def get_bill_data():
     '''
