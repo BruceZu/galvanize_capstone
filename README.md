@@ -31,14 +31,18 @@ To begin, general information from bills and joint resolutions were scraped from
 
 ![Legislation Search Page](img/legislation_search.png)
 
-From these pages, most fields and url links for each piece of legislation were scraped and dumped into a Mongo database for analysis. Since there were almost 450 web pages to be scraped, four processes were threaded and joined to gather this data quickly. 
+From these pages, most fields and url links for each piece of legislation were scraped using threads and dumped into a Mongo database for analysis. Once in Mongo, this data was then referenced to scrape additional bill details from the urls stored - such as the bill text, the number of amendments, and cosponsor information.
 
-Once in Mongo, this data was then pulled to scrape additional bill details - such as the bill text, the number of amendments, and cosponsor information - from the urls stored.
+A certain degree of ettiquete is required when scraping content from pages. In general, one should not overload a website with too many requests over a short amount of time as this may inhibit other users from pulling up the website. Many of these websites have a document [robots.txt](https://www.congress.gov/robots.txt) that may suggest certain parameters to use - such as sleep time - when scraping. In this case, since congress.gov stated a crawl-delay of 2 seconds, a random sleep time between 2 and 10 seconds was set for each of the data scrapes performed.
+
+Sleep time, consequently, increases the amount of time required to scrape all the necessary data. To do this continuously (i.e. while my local computer was offline), a tmux session was created in EC2, the script was started, and the session was detached.
+
 
 ### Step 2: Labeling
 The process for labeling mirrored the [process](https://www.usa.gov/how-laws-are-made) that a bill must undergo to become law. For this project, if a bill or joint resolution gathered enough votes to pass both the Senate and the House of Representatives, it was labeled as 'passed', or '1'. If it failed in one chamber, failed in committee, or never got voted on by the end of the legislative session, it was labeled as 'not passed', or '0'. Those remaining were deemed 'in progress' and labeled with a 'null'.
 
 ![Labeling](img/Labeling.png)
 
-### Step 2: Modeling
+
+### Step 3: Modeling
 
