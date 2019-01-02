@@ -120,7 +120,7 @@ def initiate_process(year, collection):
                 
 if __name__ == '__main__':
     print('****************')
-    print('This script is populating amendment counts into Mongo threading four years at a time where needed.')
+    print('This script is populating amendment counts into Mongo threading three years at a time where needed.')
     client = MongoClient() # defaults to localhost
     db = client.bills
     bill_info = db.bill_info
@@ -132,17 +132,17 @@ if __name__ == '__main__':
         t1 = threading.Thread(target=initiate_process, args=[y, bill_info])
         t2 = threading.Thread(target=initiate_process, args=[y-1, bill_info])
         t3 = threading.Thread(target=initiate_process, args=[y-2, bill_info])
-        t4 = threading.Thread(target=initiate_process, args=[y-3, bill_info])
+#         t4 = threading.Thread(target=initiate_process, args=[y-3, bill_info])
         
         t1.start()
         t2.start()
         t3.start()
-        t4.start()
+#         t4.start()
 
         t1.join()
         t2.join()
         t3.join()
-        t4.join()
+#         t4.join()
         
     print('-----------')
     print('-----------')
