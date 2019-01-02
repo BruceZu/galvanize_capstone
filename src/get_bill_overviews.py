@@ -17,7 +17,7 @@ def get_soup(url):
     Returns: BeautifulSoup object
     '''
     # included sleep time to attempt human user mimicking
-    sleep_time = randint(0, 16)
+    sleep_time = randint(0, 6)
     sleep(sleep_time)
     req = requests.get(url)
     stat_code = req.status_code
@@ -84,7 +84,7 @@ def soup_details_to_mongo(soup, collection):
         # we only want bills and joint resolutions
         legislation_type = columns[0].text.strip()
 
-        if (legislation_type == 'BILL') |  (legislation_type == 'JOINT RESOLUTION'):
+        if (legislation_type == 'BILL') | (legislation_type == 'JOINT RESOLUTION') | (legislation_type == 'LAW'):
             if columns[0].text != '':
                 new_row['leg_type'] = columns[0].text.strip()
             if columns[1].text.strip().split()[2] != '':
