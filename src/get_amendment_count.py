@@ -37,8 +37,8 @@ def get_soup(url):
     
     Returns: BeautifulSoup object
     '''
-    # included sleep time to attempt human user mimicking
-    sleep_time = randint(2, 6)
+    # included sleep time to mimick human user 
+    sleep_time = randint(2, 5)
     sleep(sleep_time)
     req = requests.get(url)
     stat_code = req.status_code
@@ -87,7 +87,7 @@ def update_mongo_num_of_amendments(leg_id, cong_id, amend_count, collection):
 
 def initiate_process(year, collection):
     '''
-    Initiates process from threads.
+    Initiates threads.
     '''
     print('--------------------')
     print('Cleaning up year {}'.format(year))
@@ -114,13 +114,13 @@ def initiate_process(year, collection):
             r = collection.count_documents({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}, 'num_of_amendments': None})
             if r%100 == 0:
                 print('+++++++++')
-                print('Year {}: {} records remaining with amendment counts'.format(year, r))
-                print('+++++++++')
+                print('Year {}: {} records remaining with no amendment counts'.format(year, r))
 
                 
                 
 if __name__ == '__main__':
-    print('This script is populating amendment counts into Mongo threading four years at a time for those records without any counts.')
+    print('****************')
+    print('This script is populating amendment counts into Mongo threading four years at a time where needed.')
     client = MongoClient() # defaults to localhost
     db = client.bills
     bill_info = db.bill_info
