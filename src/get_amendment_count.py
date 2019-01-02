@@ -38,7 +38,7 @@ def get_soup(url):
     Returns: BeautifulSoup object
     '''
     # included sleep time to attempt human user mimicking
-    sleep_time = randint(2, 11)
+    sleep_time = randint(2, 6)
     sleep(sleep_time)
     req = requests.get(url)
     stat_code = req.status_code
