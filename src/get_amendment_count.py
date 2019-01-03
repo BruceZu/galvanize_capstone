@@ -37,8 +37,8 @@ def get_soup(url):
     
     Returns: BeautifulSoup object
     '''
-    # included sleep time to attempt human user mimicking
-    sleep_time = randint(2, 6)
+    # included sleep time to mimick human user 
+    sleep_time = randint(2, 5)
     sleep(sleep_time)
     req = requests.get(url)
     stat_code = req.status_code
@@ -87,7 +87,7 @@ def update_mongo_num_of_amendments(leg_id, cong_id, amend_count, collection):
 
 def initiate_process(year, collection):
     '''
-    Initiates process from threads.
+    Initiates threads.
     '''
     print('--------------------')
     print('Cleaning up year {}'.format(year))
@@ -114,13 +114,13 @@ def initiate_process(year, collection):
             r = collection.count_documents({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}, 'num_of_amendments': None})
             if r%100 == 0:
                 print('+++++++++')
-                print('Year {}: {} records remaining with amendment counts'.format(year, r))
-                print('+++++++++')
+                print('Year {}: {} records remaining with no amendment counts'.format(year, r))
 
                 
                 
 if __name__ == '__main__':
-    print('This script is populating amendment counts into Mongo threading four years at a time for those records without any counts.')
+    print('****************')
+    print('This script is populating amendment counts into Mongo threading two years at a time where needed.')
     client = MongoClient() # defaults to localhost
     db = client.bills
     bill_info = db.bill_info
@@ -128,21 +128,21 @@ if __name__ == '__main__':
     # iterate through date range in reverse
     year_range = range(2007, 2019)[::-1]
 
-    for y in year_range[::3]:
+    for y in year_range[::2]:
         t1 = threading.Thread(target=initiate_process, args=[y, bill_info])
         t2 = threading.Thread(target=initiate_process, args=[y-1, bill_info])
-        t3 = threading.Thread(target=initiate_process, args=[y-2, bill_info])
-        t4 = threading.Thread(target=initiate_process, args=[y-3, bill_info])
+#         t3 = threading.Thread(target=initiate_process, args=[y-2, bill_info])
+#         t4 = threading.Thread(target=initiate_process, args=[y-3, bill_info])
         
         t1.start()
         t2.start()
-        t3.start()
-        t4.start()
+#         t3.start()
+#         t4.start()
 
         t1.join()
         t2.join()
-        t3.join()
-        t4.join()
+#         t3.join()
+#         t4.join()
         
     print('-----------')
     print('-----------')
