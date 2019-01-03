@@ -13,7 +13,7 @@ The predictions will be primarily based on natural language processing of the te
 # The Resources
 
 ### Local Machine, AWS, and tmux
-Preliminary work for this project started on a local machine. Messages were regularly included in the code to print out to the terminal to notify the user of the process status and whether any errors occurred during a process. Best practice would be to have these messages print out to a log from inception. The use of logs was incorporated later in the process.
+Preliminary work for this project started on a local machine. Messages were regularly included in the code to print out to the terminal to notify the user of the process status and whether any errors occurred during a process. Best practice would have been to have these messages print out to a log from inception. This practice was incorporated later in the process.
 
 ![system_out_messages](img/system_out_messages.png)
 
@@ -23,11 +23,11 @@ The use of [tmux](https://en.wikipedia.org/wiki/Tmux) became an essential tool f
 
 
 ### Python and Mongo
-Python was used to scrape the initial data from [congress.gov](https://www.congress.gov/search?q={%22source%22:%22legislation%22}&pageSize=250) using the Requests and BeautifulSoup packages. The data collected was put into json lines format and stored into a collections in a Mongo database. 
+Python was used to scrape the initial data from [congress.gov](https://www.congress.gov/search?q={%22source%22:%22legislation%22}&pageSize=250) using the Requests and BeautifulSoup packages. The data collected was put into json format and stored into a collection in Mongo. 
 
 
 ### my_tools.py
-The python script my_tools.py was created specifically for this project to write and read logs and files, format data from Mongo, put bill text through a Natural Language Processing pipeline, and other functions that were regularly used during scraping, exploration, and modeling of the data.
+The python script my_tools.py was created specifically for this project to write and read logs and files, format data from Mongo, put bill text through a Natural Language Processing pipeline, and other functions which were used regularly during scraping, exploration, and modeling of the data.
 
 
 
@@ -40,11 +40,11 @@ To begin, general information from bills and joint resolutions were scraped from
 
 From these pages, most fields and url links for each piece of legislation were scraped using threads and dumped into a Mongo database for analysis. Once in Mongo, this data was then referenced to scrape additional bill details from the urls stored - such as the bill text, the number of amendments, and cosponsor information.
 
-Additionally, the data on [congress.gov](https://www.congress.gov/search?q={%22source%22:%22legislation%22}&pageSize=250) is updated daily. In order to include this data in this project, daily processes were created that will scrape the data from the most recent congressional session, compare certain fields to documents already stored in Mongo, and update or add documents as needed.
+Additionally, the data on [congress.gov](https://www.congress.gov/search?q={%22source%22:%22legislation%22}&pageSize=250) is updated daily. In order to include this data in the project, daily processes were created that will scrape the data from the most recent congressional session, compare certain fields to documents already stored in Mongo, and update or add documents as needed.
 
 
 ### Step 2: Labeling
-The process for labeling mirrored the [process](https://www.usa.gov/how-laws-are-made) that a bill must undergo to become law. For this project, if a bill or joint resolution gathered enough votes to pass both the Senate and the House of Representatives, it was labeled as 'passed', or '1'. If it failed in one chamber, failed in committee, or never got voted on by the end of the legislative session, it was labeled as 'not passed', or '0'. Those remaining were deemed 'in progress' and labeled with a 'null'.
+The process for labeling somewhat mirrored the [process](https://www.usa.gov/how-laws-are-made) that a bill must undergo to become law. For this project, if a bill or joint resolution gathered enough votes to pass both the Senate and the House of Representatives, it was labeled as 'passed', or '1'. If it failed in one chamber, failed in committee, or never got voted on by the end of the legislative session, it was labeled as 'not passed', or '0'. Those remaining were deemed 'in progress' and labeled with a 'null'. Refer to the decision tree below for the logic used for labeling.
 
 ![Labeling](img/Labeling.png)
 
