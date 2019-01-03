@@ -86,11 +86,11 @@ def get_bill_data():
     # connect to mongodb
     client = MongoClient() # defaults to localhost
     db = client.bills
-    bill_details = db.bill_details
+    bill_info = db.bill_info
     
     # get mongoo data and convert mongo query resuls to dataframe
     # need to execute query (.find) everytime i refer to it?
-    records_with_text = bill_details.find({'body': {'$regex': 'e'}})
+    records_with_text = bill_info.find({'body': {'$regex': '(.+)'}})
     data = pd.DataFrame(list(records_with_text))
     
     
@@ -120,11 +120,11 @@ def get_bill_data():
     # convert num_of_cosponsors to numeric
     data['num_of_cosponsors'] = data['num_of_cosponsors'].apply(pd.to_numeric)
     
-    # correction for mislabeled sponsor_state and sponsor_party
-    state = copy.copy(data['sponsor_state'])
-    party = copy.copy(data['sponsor_party'])
-    data['sponsor_state'] = party
-    data['sponsor_party'] = state
+#     # correction for mislabeled sponsor_state and sponsor_party
+#     state = copy.copy(data['sponsor_state'])
+#     party = copy.copy(data['sponsor_party'])
+#     data['sponsor_state'] = party
+#     data['sponsor_party'] = state
     
     # create column for getting char_counts into buckets
     data['char_count_bucket'] = None
@@ -172,8 +172,8 @@ def get_bill_data():
 
     # break up others into current congress and previous ones. Anything that hasn't been signed into law
     # before current session is dead. Currently, all bills vetoed by the president come from previous congresses
-    current_cong = others[others['congress_id'] == '115th'].copy()
-    prev_cong = others[others['congress_id'] != '115th'].copy()
+    current_cong = others[others['congress_id'] == '115'].copy()
+    prev_cong = others[others['congress_id'] != '115'].copy()
 
     prev_cong.loc[:, 'labels'] = 0
 
@@ -229,18 +229,18 @@ def get_bill_data():
 
 
     # filter for most recent congress_ids
-    small_df = df[(df['congress_id'] == '115th') | 
-              (df['congress_id'] == '114th') | 
-              (df['congress_id'] == '113th')| 
-              (df['congress_id'] == '112th')| 
-              (df['congress_id'] == '111th')| 
-              (df['congress_id'] == '110th')].copy()
+    small_df = df[(df['congress_id'] == '115') | 
+              (df['congress_id'] == '114') | 
+              (df['congress_id'] == '113')| 
+              (df['congress_id'] == '112')| 
+              (df['congress_id'] == '111')| 
+              (df['congress_id'] == '110')].copy()
 
     
     print('------------------')
     print('------------------')
-    print('Data is that with text from the 110th Congress (2007) to present')
-    print('Alter masking in my_tools.get_bill_data to get a different data set.')
+    print('Data includes bills, joints resolutions, and laws with text from the 110th Congress (2007) to present')
+    print('Make changes in my_tools.get_bill_data to modify the data set.')
     print('------------------')
 
     
