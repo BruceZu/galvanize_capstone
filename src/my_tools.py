@@ -117,8 +117,9 @@ def get_bill_data():
                (data['num_of_cosponsors'] != 'TXT') &
                (data['num_of_cosponsors'] != 'All Actions')].copy()
     
-    # convert num_of_cosponsors to numeric
+    # convert num_of_cosponsors and num_of_amendments to numeric
     data['num_of_cosponsors'] = data['num_of_cosponsors'].apply(pd.to_numeric)
+    data['num_of_amendments'] = data['num_of_amendments'].apply(pd.to_numeric)
     
 #     # correction for mislabeled sponsor_state and sponsor_party
 #     state = copy.copy(data['sponsor_state'])
