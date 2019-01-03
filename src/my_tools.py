@@ -283,7 +283,7 @@ def process_corpus(df, corpus_col_name):
     print('Stripping out stop words, punctuation, and numbers...')
     stop_words = stopwords.words('english')
     stop_words.extend(['mr', 'ms', 'mrs', 'said', 'year', 'would', 'could', 'also', 'shall', '_______________________________________________________________________'])
-    stop_words.extend(['th', 'st', 'nd', 'h.r', 'h.', 'r.', 'ih', 's.', 'introduced', 'page', 'stat'])
+    stop_words.extend(['th', 'st', 'nd', 'h.r', 'h.', 'r.', 'ih', 's.', 'introduced', 'page', 'stat', 'aa', '--'])
     # print(stop_words)
     corpus = [[token for token in doc if token not in stop_words] for doc in corpus]
     # corpus[0]
@@ -301,13 +301,13 @@ def process_corpus(df, corpus_col_name):
     corpus = [[lemmer.lemmatize(word) for word in doc] for doc in corpus]
     # corpus[0]
 
-    # build a vocabulary
-    print('------------------')
-    print('Creating a vocabulary...')
-    vocab_set = set()
-    [[vocab_set.add(token) for token in tokens] for tokens in corpus]
-    vocab = list(vocab_set)
-    # vocab[100000:100020]
+#     # build a vocabulary
+#     print('------------------')
+#     print('Creating a vocabulary...')
+#     vocab_set = set()
+#     [[vocab_set.add(token) for token in tokens] for tokens in corpus]
+#     vocab = list(vocab_set)
+#     # vocab[100000:100020]
 
     # # for later model...
     # # examine n-grams...
