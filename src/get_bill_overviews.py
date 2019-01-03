@@ -80,59 +80,58 @@ def soup_details_to_mongo(soup, collection):
 
         # parse items within 'span' tag
         columns = row.find_all('span')
+        if len(columns) > 3:
+            # we only want bills and joint resolutions
+            legislation_type = columns[0].text.strip()
 
-        # we only want bills and joint resolutions
-        legislation_type = columns[0].text.strip()
-
-        if (legislation_type == 'BILL') | (legislation_type == 'JOINT RESOLUTION') | (legislation_type == 'LAW'):
-            if columns[0].text != '':
-                new_row['leg_type'] = columns[0].text.strip()
-            if columns[1].text.strip().split()[2] != '':
-                new_row['congress_id'] = columns[1].text.strip().split()[2][:3]
-            if columns[2].text != '':
-                new_row['desc'] = columns[2].text
-            if len(columns) > 4:
+            if (legislation_type == 'BILL') |  (legislation_type == 'JOINT RESOLUTION') | (legislation_type == 'LAW'):
+                if columns[0].text != '':
+                    new_row['leg_type'] = legislation_type
+                if columns[1].text.strip().split()[2] != '':
+                    new_row['congress_id'] = columns[1].text.strip().split()[2][:3]
+                if columns[2].text != '':
+                    new_row['desc'] = columns[2].text
                 if ('Committee' in columns[4].text):
                     new_row['committee'] = columns[4].text.strip()[12:]
 
-            dt = columns[3].text.strip().split()
-            if '(Introduced' in dt:
-                new_row['intro_date'] = dt[dt.index('(Introduced') + 1][:-1]
+                dt = columns[3].text.strip().split()
+                if '(Introduced' in dt:
+                    new_row['intro_date'] = dt[dt.index('(Introduced') + 1][:-1]
 
 
-            # bill_status is within 'p' tag
-            columns = row.find_all('p')
-            if columns[0].text.strip()[25:] != '':
-                new_row['bill_status'] = columns[0].text.strip()[25:]
+                # bill_status is within 'p' tag
+                columns = row.find_all('p')
+                if columns[0].text.strip()[25:] != '':
+                    new_row['bill_status'] = columns[0].text.strip()[25:]
 
 
-            # parse info within 'a' tag
-            columns = row.find_all('a')
-            if columns[0].text.strip() != '':
-                new_row['leg_id'] = columns[0].text.strip().replace('.', ' ')
+                # parse info within 'a' tag
+                columns = row.find_all('a')
+                if columns[0].text.strip() != '':
+                    new_row['leg_id'] = columns[0].text.strip().replace('.', ' ')
 
-            # also within 'a' tag, reserved bill numbers will not have the information below
-            if (len(columns) > 2):    
-                if columns[0]['href'].strip() != '':
-                    new_row['leg_url'] = columns[0]['href'].strip()
-                if columns[2].text.strip() != '':
-                    new_row['num_of_cosponsors'] = columns[2].text.strip()
-                    if new_row['num_of_cosponsors'] != '0':
-                        new_row['cosponsors_url'] = columns[2]['href']
+                # also within 'a' tag, reserved bill numbers will not have the information below
+                if (len(columns) > 2):    
+                    if columns[0]['href'].strip() != '':
+                        new_row['leg_url'] = columns[0]['href'].strip()
+                    if columns[2].text.strip() != '':
+                        new_row['num_of_cosponsors'] = columns[2].text.strip()
+                        if new_row['num_of_cosponsors'] != '0':
+                            new_row['cosponsors_url'] = columns[2]['href']
 
-            # party, state, and district (for house reps) need to be stripped out of sponsor info
-                for c in range(len(columns)):
-                    if '[' in columns[c].text.strip():
-                        rep = columns[c].text.strip()
-                        new_row['sponsor'] = rep.rsplit('[', 1)[0][:-1][5:]
-                        party_dist = rep.rsplit('[', 1)[1][: -1]
-                        party_dist_split = party_dist.split('-')
-                        new_row['sponsor_state'] = party_dist_split[1]
-                        new_row['sponsor_party'] = party_dist_split[0]
-                        if len(party_dist_split) == 3:
-                            new_row['sponsor_district'] = party_dist_split[2]
+                # party, state, and district (for house reps) need to be stripped out of sponsor info
+                    for c in range(len(columns)):
+                        if '[' in columns[c].text.strip():
+                            rep = columns[c].text.strip()
+                            new_row['sponsor'] = rep.rsplit('[', 1)[0][:-1][5:]
+                            party_dist = rep.rsplit('[', 1)[1][: -1]
+                            party_dist_split = party_dist.split('-')
+                            new_row['sponsor_state'] = party_dist_split[1]
+                            new_row['sponsor_party'] = party_dist_split[0]
+                            if len(party_dist_split) == 3:
+                                new_row['sponsor_district'] = party_dist_split[2]
             
-            collection.insert_one(new_row)
+                collection.insert_one(new_row)
 
 
             
