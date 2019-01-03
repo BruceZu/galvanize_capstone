@@ -283,6 +283,7 @@ def process_corpus(df, corpus_col_name):
     print('Stripping out stop words, punctuation, and numbers...')
     stop_words = stopwords.words('english')
     stop_words.extend(['mr', 'ms', 'mrs', 'said', 'year', 'would', 'could', 'also', 'shall', '_______________________________________________________________________'])
+    stop_words.extend(['th', 'st', 'nd', 'h.r', 'h.', 'r.', 'ih', 's.', 'introduced'])
     # print(stop_words)
     corpus = [[token for token in doc if token not in stop_words] for doc in corpus]
     # corpus[0]
@@ -292,10 +293,6 @@ def process_corpus(df, corpus_col_name):
     # print(punc)
     corpus = [[token for token in doc if token not in punc] for doc in corpus]
     # corpus[0]
-
-    # strip out the punctuation
-    string.digits
-
 
     # lemmatize (and maybe stem?)
     print('------------------')
