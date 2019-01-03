@@ -9,22 +9,29 @@ This project is an attempt to predict whether a bill or joint resolution will pa
 The predictions will be primarily based on natural language processing of the text of the bill. I also hope to enhance these predictions using decision trees to determine other important features, such as word/character counts, party affiliation of the sponsor of the legislation, number of cosponsors, the date the legislation was introduced, number of amendments, etc.
 
 
-## Resources
 
-### Local Machine and AWS
-Most of the work done for this project started on a local machine. Messages were regularly included in the code to print out to the terminal to notify the user of the process status and whether any errors occurred during a process. Best practice of this would be to have these messages print out to a log.
+# The Resources
+
+### Local Machine, AWS, and tmux
+Preliminary work for this project started on a local machine. Messages were regularly included in the code to print out to the terminal to notify the user of the process status and whether any errors occurred during a process. Best practice would be to have these messages print out to a log from inception. The use of logs was incorporated later in the process.
 
 ![system_out_messages](img/system_out_messages.png)
 
-Once it was felt that a process (i.e. web scraping) was working with relatively few errors, the code was migrated into a Ubuntu 18.04 EC2 instance in [Amazon Web Services](https://aws.amazon.com). The EC2 instance is, ultimately, where the modeling and interaction with the data and predictions will occur.
+Once it was felt that a process (i.e. web scraping) was working with relatively few errors, the code was migrated into a Ubuntu 18.04 EC2 instance in [Amazon Web Services](https://aws.amazon.com). The EC2 instance is, ultimately, where the modeling and interaction with the data and predictions occur.
+
+The use of [tmux](https://en.wikipedia.org/wiki/Tmux) became an essential tool for this project once EC2 became the primary "base of operations". Since web scraping - which incorporated sleep time - and training take an extraordinary amount of time to complete, tmux allows the user to start a script and detach from it so it continues to run regardless of whether the local machine is connected.
 
 
 ### Python and Mongo
 Python was used to scrape the initial data from [congress.gov](https://www.congress.gov/search?q={%22source%22:%22legislation%22}&pageSize=250) using the Requests and BeautifulSoup packages. The data collected was put into json lines format and stored into a collections in a Mongo database. 
 
 
+### my_tools.py
+The python script my_tools.py was created specifically for this project to write and read logs and files, format data from Mongo, put bill text through a Natural Language Processing pipeline, and other functions that were regularly used during scraping, exploration, and modeling of the data.
 
-## The Process
+
+
+# The Process
 
 ### Step 1: Data Wrangling
 To begin, general information from bills and joint resolutions were scraped from the Legislation search pages on [congress.gov](https://www.congress.gov/search?q={%22source%22:%22legislation%22}&pageSize=250). 
@@ -33,9 +40,7 @@ To begin, general information from bills and joint resolutions were scraped from
 
 From these pages, most fields and url links for each piece of legislation were scraped using threads and dumped into a Mongo database for analysis. Once in Mongo, this data was then referenced to scrape additional bill details from the urls stored - such as the bill text, the number of amendments, and cosponsor information.
 
-A certain degree of ettiquete is required when scraping content from pages. In general, one should not overload a website with too many requests over a short amount of time as this may inhibit other users from pulling up the website. Many of these websites have a document [robots.txt](https://www.congress.gov/robots.txt) that may suggest certain parameters to use - such as sleep time - when scraping. In this case, since congress.gov stated a crawl-delay of 2 seconds, a random sleep time between 2 and 10 seconds was set for each of the data scrapes performed.
-
-Sleep time, consequently, increases the amount of time required to scrape all the necessary data. To do this continuously (i.e. while my local computer was offline), a tmux session was created in EC2, the script was started, and the session was detached.
+Additionally, the data on [congress.gov](https://www.congress.gov/search?q={%22source%22:%22legislation%22}&pageSize=250) is updated daily. In order to include this data in this project, daily processes were created that will scrape the data from the most recent congressional session, compare certain fields to documents already stored in Mongo, and update or add documents as needed.
 
 
 ### Step 2: Labeling
@@ -45,4 +50,11 @@ The process for labeling mirrored the [process](https://www.usa.gov/how-laws-are
 
 
 ### Step 3: Modeling
+nlp
+random forest
+boosting
+graph theory/neighborhoods
 
+
+### Additional Information
+The 115th Congress ends on January 3, 2018. Every bill and joint resolution that hasn't become law by the end of that day will be labeled as "not passed". 
