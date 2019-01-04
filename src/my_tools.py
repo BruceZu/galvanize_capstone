@@ -264,7 +264,7 @@ def process_corpus(df, corpus_col_name):
     '''
     # create a corpus
     print('------------------')
-    print('Creating corpus...')
+    print('Step 1 of 4: Creating corpus...')
     documents = list(df[corpus_col_name])
 
     # remove numbers
@@ -275,15 +275,16 @@ def process_corpus(df, corpus_col_name):
 
     # tokenize the corpus
     print('------------------')
-    print('Tokenizing...')
+    print('Step 2 of 4: Tokenizing...')
     corpus = [word_tokenize(content.lower()) for content in documents]
 
     # strip out the stop words from each 
     print('------------------')
-    print('Stripping out stop words, punctuation, and numbers...')
+    print('Step 3 of 4: Stripping out stop words, punctuation, and numbers...')
     stop_words = stopwords.words('english')
     stop_words.extend(['mr', 'ms', 'mrs', 'said', 'year', 'would', 'could', 'also', 'shall', '_______________________________________________________________________'])
-    stop_words.extend(['th', 'st', 'nd', 'h.r', 'h.', 'r.', 'ih', 's.', 'introduced', 'page', 'stat', 'aa', '--'])
+    stop_words.extend(['th', 'st', 'nd', 'h.r', 'h.', 'r.', 'ih', 's.', 'introduced', 'page', 'stat', '--'])
+    stop_words.extend(['hundred', 'sixteenth', 'fifteenth', 'fourteenth', 'thirteenth', 'twelfth', 'eleventh', 'tenth'])
     # print(stop_words)
     corpus = [[token for token in doc if token not in stop_words] for doc in corpus]
     # corpus[0]
@@ -296,7 +297,7 @@ def process_corpus(df, corpus_col_name):
 
     # lemmatize (and maybe stem?)
     print('------------------')
-    print('Lemmatizing...')
+    print('Step 4 of 4: Lemmatizing...')
     lemmer = WordNetLemmatizer()
     corpus = [[lemmer.lemmatize(word) for word in doc] for doc in corpus]
     # corpus[0]
@@ -310,6 +311,7 @@ def process_corpus(df, corpus_col_name):
 #     # vocab[100000:100020]
 
     # # for later model...
+    # # n-grams fitted in TfidfVectorizer
     # # examine n-grams...
     # # bigrams (two words side-by-side)
     # print('------------------')
