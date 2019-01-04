@@ -126,7 +126,7 @@ if __name__ == '__main__':
     bill_info = db.bill_info
 
     # iterate through date range in reverse
-    year_range = range(2007, 2019)[::-1]
+    year_range = range(2007, 2020)[::-1]
 
     for y in year_range[::2]:
         t1 = threading.Thread(target=initiate_process, args=[y, bill_info])
