@@ -113,8 +113,11 @@ def get_bill_data():
     # strip out month from intro date
     data['intro_month'] = data['intro_date'].apply(lambda x: x.month)
     
+    # strip out month from intro date
+    data['intro_year'] = data['intro_date'].apply(lambda x: x.year)
+
     # get session from year (odd years are Session 1, even years are Session 2)
-    data['session'] = data['congress_id'].apply(lambda x: 2 if int(x[:3])%2 == 0 else 1)
+    data['session'] = data['intro_year'].apply(lambda x: 2 if int(x)%2 == 0 else 1)
     
     # filter out non-numeric num_of_cosponsors: S. Rept. 110-184, TXT, All Actions
     data = data[(data['num_of_cosponsors'] != 'S. Rept. 110-184') &
