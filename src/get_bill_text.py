@@ -1,6 +1,9 @@
 '''
+----------------------------------------------
 Once data has been populated into Mongo database, this script will populate the bill text
 in the 'body' field if text doesn't already exist. 
+
+----------------------------------------------
 '''
 from pymongo import MongoClient
 from bs4 import BeautifulSoup
@@ -14,12 +17,17 @@ from my_tools import write_json_file
 
 def url_builder(record_url):
     '''
+    ----------------------------------------------
     Builds endpoint url from leg_url in mongo. Endpoint url should be the site that 
     contains the text version of the bill.
     
+    ----------------------------------------------
     Parameters: a mongo record
     
+    ----------------------------------------------
     Returns:    url
+
+    ----------------------------------------------
     '''
     url_root = record_url.rsplit('?')[0]
     return '{}/text?format=txt&r=1'.format(url_root)
@@ -27,11 +35,16 @@ def url_builder(record_url):
 
 def get_bill_text(site_url):
     '''
+    ----------------------------------------------
     Scrapes the page at url to return the text of the bill.
     
+    ----------------------------------------------
     Parameters: url
     
+    ----------------------------------------------
     Returns:    bill text, if it exists
+    
+    ----------------------------------------------
     '''
     # included sleep time to mimick human user 
     sleep_time = randint(2, 5)
@@ -39,6 +52,8 @@ def get_bill_text(site_url):
 
     req = requests.get(site_url)
     stat_code = req.status_code
+    
+    log_path = '/home/ubuntu/galvanize_capstone/data/logs/bill_text_errors.jsonl'
 
     # if error in getting url, print and log the error
     if stat_code != 200:
@@ -48,9 +63,9 @@ def get_bill_text(site_url):
         print('\t{}'.format(site_url))
         print('\t\tError in retrieving bill text.')
         print('\t\tRequest Status Code: {}'.format(stat_code))
-        errored_line = {'url': site_url, 'error': stat_code}
-        write_json_file(errored_line, '../data/logs/bill_text_errors.jsonl')
-        print('Error logged in ../data/logs/bill_text_errors.jsonl')
+        errored_line = {'url': site_url, 'error': stat_code, 'process': 'bill text'}
+        write_json_file(errored_line, log_path)
+        print('Error logged in {}'.format(log_path))
 
     if stat_code == 200:
         soup = BeautifulSoup(req.content, 'lxml')
@@ -63,7 +78,7 @@ def get_bill_text(site_url):
             print('\t{}'.format(site_url))
             print('\t\tNo text available for scraping. Logging...')
             errored_line = {'url': site_url, 'error': 'no text available', 'process': 'bill text'}
-            write_json_file(errored_line, '../data/logs/bill_text_errors.jsonl')
+            write_json_file(errored_line, log_path)
             
             return None
 
@@ -78,22 +93,29 @@ def get_bill_text(site_url):
 
 def update_mongo_body(txt, bill_issue, cong_id, collection):  
     '''
+    ----------------------------------------------
     Updates the body field in the mongo record specified by bill_issue (leg_id) and
     cong_id (congress_id) from db.collection with txt.
     
+    ----------------------------------------------
     Parameters: txt - the text of the bill
                 bill_issue - value to filter on for key leg_id
                 cong_id - value to filter on for key congress_id
                 collection - the name of the mongo collection
                 
+    ----------------------------------------------
     Returns:    None
+    
+    ----------------------------------------------
     '''
     collection.update_one({'leg_id': bill_issue, 'congress_id': cong_id}, {'$set': {'body': txt}})
 
 
 def initiate_process(year, collection):
     '''
+    ----------------------------------------------
     Initiates process from threads.
+    ----------------------------------------------
     '''
 #     client = MongoClient() # defaults to localhost
 #     db = client.bills

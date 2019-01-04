@@ -1,22 +1,29 @@
 from pymongo import MongoClient
 import copy
+import os
+
 from bs4 import BeautifulSoup
 import requests
 from random import randint
 from time import sleep
 import threading
 
-from my_tools import write_jsonl_file, write_json_file
+from my_tools import write_json_file
 
 
 def get_soup(url):
     '''
+    ---------------------------------------
     Get soup object from url to be parsed out in another function. If status code != 200, 
     prints out error message.
     
+    ---------------------------------------
     Parameters: url
     
-    Returns: BeautifulSoup object
+    ---------------------------------------
+    Returns:    BeautifulSoup object
+    
+    ---------------------------------------
     '''
     # included sleep time to attempt human user mimicking
     sleep_time = randint(0, 11)
@@ -42,13 +49,18 @@ def get_soup(url):
     
 def soup_details_to_list(soup):
     '''
+    ---------------------------------------
     Parses out the details from the soup object and inserts the details into list. Each 
     item in the list will be compared to the data that already exists in Mongo.
     
+    ---------------------------------------
     Parameters: soup - a soup object with table within 'ol' class
                 collection - collection name of Mongo database
                 
+    ---------------------------------------
     Returns:    list of bill details to compare to what is already in Mongo
+    
+    ---------------------------------------
     '''
     # initialize empty list to temporarily store data.
     # each item will be checked against Mongo data to see if anything has changed since the last load.
@@ -151,8 +163,19 @@ def soup_details_to_list(soup):
 
 def mongo_check(leg_id, cong_id, collection):
     '''
+    ---------------------------------------
     Checks to see if a record from web scrape is in Mongo by querying the leg_id and
     cong_id. Returns True if present, else returns False.
+    
+    ---------------------------------------
+    Parameters: leg_id - the bill identifier
+                cong_id - the congress id the bill was introduced in
+                collection - Mongo collection
+                
+    ---------------------------------------
+    Returns:    boolean - False if record is not present in Mongo, else True
+    
+    ---------------------------------------
     '''
     mongo_record = collection.find_one({'leg_id': leg_id, 'congress_id': cong_id})
     if mongo_record is None: 
@@ -165,16 +188,21 @@ def mongo_check(leg_id, cong_id, collection):
 
 def update_mongo_value(leg_id, cong_id, key_to_update, new_value, collection):  
     '''
+    ---------------------------------------
     Updates the value for a single key in a mongo record specified by leg_id and
     cong_id (congress_id) from db.collection with new_value.
     
+    ---------------------------------------
     Parameters: leg_id - value to filter on for key leg_id
                 cong_id - value to filter on for key congress_id
                 key_to_update - key from document that needs to be updated
                 new_value - new value to be inserted into mongo document
                 collection - the name of the mongo collection
                 
+    ---------------------------------------
     Returns:    None
+    
+    ---------------------------------------
     '''
     collection.update_one({'leg_id': leg_id, 'congress_id': cong_id}, {'$set': {key_to_update: new_value}})
 
@@ -182,6 +210,7 @@ def update_mongo_value(leg_id, cong_id, key_to_update, new_value, collection):
     
 def update_mongo_with_list_values(bill_list, collection):
     '''
+    ---------------------------------------
     Compares each item in bill_list (scraped data) to documents in Mongo collection. 
     
     If the item is not in Mongo, it inserts it.
@@ -189,10 +218,14 @@ def update_mongo_with_list_values(bill_list, collection):
     If the item is in Mongo collection, it updates values if they do not match by 
     calling function update_mongo_value.
     
-    Parameters - bill_list - list of bills created from web scrape (soup_details_to_list)
-                 collection - Mongo collection to query and update, if needed.
+    ---------------------------------------
+    Parameters: bill_list - list of bills created from web scrape (soup_details_to_list)
+                collection - Mongo collection to query and update, if needed.
                  
-    Returns -    None
+    ---------------------------------------
+    Returns:    None
+    
+    ---------------------------------------
     '''
     keys_to_check = ['leg_type', 'desc', 'num_of_cosponsors', 'committee', 'bill_status']
 
@@ -212,7 +245,7 @@ def update_mongo_with_list_values(bill_list, collection):
                     print('\tLogging and updating {} {}... \n\t\t...from {} \n\t\t...to {}'.format(leg_id, k, mongo_document[k], list_record[k]))
 
                     line_to_log = {'congress_id': cong_id, 'leg_id': leg_id, k: {'old_value': mongo_document[k], 'new_value': list_record[k]}}
-                    write_json_file(line_to_log, '../data/logs/mongo_updates.jsonl')
+                    write_json_file(line_to_log, '/home/ubuntu/galvanize_capstone/data/logs/mongo_updates.jsonl')
                     update_mongo_value(leg_id, cong_id, k, list_record[k], collection)
         
         # if list_record not in Mongo, insert it
@@ -224,7 +257,9 @@ def update_mongo_with_list_values(bill_list, collection):
 
 def min_cong_id_in_soup(soup):
     '''
-    Returns the min of congress_id scraped from a page as int. Used to limit web scraping.
+    ---------------------------------------
+    Returns the min of congress_id scraped from a soup object. Used to limit web scraping.
+    ---------------------------------------
     '''
     cong_ids = []
 
@@ -252,18 +287,18 @@ def min_cong_id_in_soup(soup):
 if __name__ == '__main__':
     print('*****************')
     print('This script is scraping to update bill info in Mongo.')
-    print('Results of this update will be logged in ../data/logs/mongo_updates.jsonl')
     
-    # reset log
-    write_jsonl_file([''], '../data/logs/mongo_updates.jsonl')
-
+    log_path = '/home/ubuntu/galvanize_capstone/data/logs/mongo_updates.jsonl'
+    print('Results of this update will be logged in {}'.format(log_path))
+    
     # initialize Mongo client
     client = MongoClient()
     db = client.bills
     bill_info = db.bill_info
 
     # reset log
-    write_jsonl_file([''], '../data/logs/mongo_updates.jsonl')
+    if os.path.exists(log_path):
+        os.remove(log_path)
 
     # 110th Congress ends at page 444, but break will limit scraping
     page_range = range(1, 500)

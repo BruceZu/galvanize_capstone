@@ -1,6 +1,9 @@
 '''
+------------------------------------------
 Once data has been populated into Mongo database, this script will populate the amendment
 count in the 'num_of_amendments' field if it doesn't already exist. 
+
+------------------------------------------
 '''
 from pymongo import MongoClient
 from bs4 import BeautifulSoup
@@ -14,12 +17,17 @@ from my_tools import write_json_file
 
 def url_builder(record_url):
     '''
+    ------------------------------------------
     Builds endpoint url from leg_url in mongo. Endpoint url should be the site that 
     contains the amendments of the bill.
     
+    ------------------------------------------
     Parameters: url from a the leg_url field in a mongo record
     
+    ------------------------------------------    
     Returns:    url to the amendment of the mongo record
+    
+    ------------------------------------------
     '''
     url_root = record_url.split('?')[0]
     url_tail = record_url.split('?')[1]
@@ -30,12 +38,17 @@ def url_builder(record_url):
 
 def get_soup(url):
     '''
+    ------------------------------------------
     Get soup object from url to be parsed out in another function. If status code != 200, 
     prints out error message.
     
+    ------------------------------------------    
     Parameters: url
     
+    ------------------------------------------  
     Returns: BeautifulSoup object
+    
+    ------------------------------------------
     '''
     # included sleep time to mimick human user 
     sleep_time = randint(2, 5)
@@ -51,7 +64,7 @@ def get_soup(url):
         print('\t\tError in retrieving amendment count. Logging...')
         print('\t\tRequest Status Code: {}'.format(stat_code))
         errored_line = {'url': site_url, 'error': stat_code, 'process': 'amendment count'}
-        write_json_file(errored_line, '../data/logs/bill_text_errors.jsonl')
+        write_json_file(errored_line, '/home/ubuntu/galvanize_capstone/data/logs/bill_text_errors.jsonl')
 
     if stat_code == 200:
         soup = BeautifulSoup(req.content, 'lxml')
@@ -61,7 +74,10 @@ def get_soup(url):
 
 def get_num_of_amendments(soup): 
     '''
+    ------------------------------------------
     Returns the number of amendments for the specific bill referenced in the soup object.
+    
+    ------------------------------------------
     '''
     tabs = soup.find('ul', {'class': 'tabs_links'})
     titles = tabs.find_all('a')
@@ -72,22 +88,30 @@ def get_num_of_amendments(soup):
         
 def update_mongo_num_of_amendments(leg_id, cong_id, amend_count, collection):
     '''
+    ------------------------------------------
     Updates the num_of_amendments field in the mongo record specified by bill_issue (leg_id) 
     and cong_id (congress_id) from db.collection with amend_count.
     
+    ------------------------------------------
     Parameters: leg_id - value to filter on for key leg_id
                 cong_id - value to filter on for key congress_id
                 amend_count - number of amendments
                 collection - the name of the mongo collection
                 
+    ------------------------------------------
     Returns:    None
+    
+    ------------------------------------------
     '''
     collection.update_one({'leg_id': leg_id, 'congress_id': cong_id}, {'$set': {'num_of_amendments': amend_count}})
 
 
 def initiate_process(year, collection):
     '''
+    ------------------------------------------
     Initiates threads.
+
+    ------------------------------------------
     '''
     print('--------------------')
     print('Cleaning up year {}'.format(year))
