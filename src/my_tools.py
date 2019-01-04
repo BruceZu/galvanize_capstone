@@ -63,7 +63,9 @@ def write_json_file(obj, path):
     
 def collection_to_df(collection):
     '''
+    --------------------
     Returns a dataframe from a mongo collection.
+    --------------------
     '''
     data = pd.DataFrame
     for i in range(collection.count()):
@@ -73,6 +75,7 @@ def collection_to_df(collection):
 
 def get_bill_data():
     '''
+    --------------------
     Query data from mongo db bills.bill_details and return a pandas dataframe.
     
     The data relevant to this project is currently set up to be limited to the 
@@ -80,8 +83,9 @@ def get_bill_data():
     --------------------
     Parameters: None.
     --------------------    
-    Returns: pandas dataframe with relevant data and corresponding labels.
-                
+    Returns:    Dataframe with relevant data and corresponding labels, 0 or 1.
+                Dataframe with records labeled 'in progress'
+    --------------------
     '''
     # connect to mongodb
     client = MongoClient() # defaults to localhost
@@ -226,6 +230,7 @@ def get_bill_data():
 
 
     # filter out those that are still in progress
+    df_in_progress = data_l[data_l['labels'] == 'in_progress'].copy()
     df = data_l[data_l['labels'] != 'in_progress'].copy()
 
 
@@ -245,22 +250,24 @@ def get_bill_data():
     print('------------------')
 
     
-    return small_df.reset_index(drop = True)
+    return small_df.reset_index(drop = True), df_in_progress.reset_index(drop=True)
 
 
 
 def process_corpus(df, corpus_col_name):
     '''
+    --------------------
     Processes the text in df[corpus_col_name] to return a corpus (list) and the series of 
-    corresponding labels in df[label_col_name].
+    corresponding labels.
     
     The intent of this function is to feed the output into a stratified train-test split.
     -------------------
     Parameters: df - pandas dataframe
                 corpus_col_name - name of column in df that contains the text to be processed.
     -------------------
-    Returns: X - a list of documents
-             y - a pandas series of corresponding labels as int
+    Returns:    X - a list of documents
+                y - a pandas series of corresponding labels as int
+    --------------------
     '''
     # create a corpus
     print('------------------')
@@ -331,9 +338,9 @@ def process_corpus(df, corpus_col_name):
     print('NLP preprocessing complete ...')
 
     X = corpus
-    y = df['labels'].astype('int')
+#     y = df['labels'].astype('int')
     
-    return X, y
+    return X#, y
 
 
 
