@@ -1,3 +1,13 @@
+'''
+---------------------------------------------------------
+This script is for the initial data pull of data overview infomation from Congress.gov and put into a Mongo
+collection. At the time of the initial pull for this project, 444 pages needed to be scraped to get every 
+bill and joint resolution between the 110th and 115th Congress.
+
+Once information from the script is loaded into Mongo, run ../new_data/get_bill_text.py and 
+../new_data/get_amendment_count.py to populate that info into the existing records
+---------------------------------------------------------
+'''
 import pandas as pd
 from pymongo import MongoClient
 import copy
