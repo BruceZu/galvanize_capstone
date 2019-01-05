@@ -87,6 +87,8 @@ def get_bill_data():
                 Dataframe with records labeled 'in progress'
     --------------------
     '''
+    current_congress = '116'
+    
     # connect to mongodb
     client = MongoClient() # defaults to localhost
     db = client.bills
@@ -96,12 +98,14 @@ def get_bill_data():
     # need to execute query (.find) everytime i refer to it?
     records_with_text = bill_info.find({'body': {'$regex': '(.+)'}})
     data = pd.DataFrame(list(records_with_text))
+#     documents = bill_info.find()
+#     data = pd.DataFrame(list(documents))
     
     
     
     # DATA CLEANUP
-    # filter out simple resolutions, concurrent resolutions, and amendments (for prelim model)
-    data = data[(data['leg_type'] != 'RESOLUTION') & (data['leg_type'] != 'CONCURRENT RESOLUTION') & (data['leg_type'] != 'AMENDMENT')].copy()
+#     # filter out simple resolutions, concurrent resolutions, and amendments (for prelim model)
+#     data = data[(data['leg_type'] != 'RESOLUTION') & (data['leg_type'] != 'CONCURRENT RESOLUTION') & (data['leg_type'] != 'AMENDMENT')].copy()
     
     # create column for character counts of the bill text
     bill_lengths = list(map(lambda x: len(x), data['body']))
@@ -180,8 +184,8 @@ def get_bill_data():
 
     # break up others into current congress and previous ones. Anything that hasn't been signed into law
     # before current session is dead. Currently, all bills vetoed by the president come from previous congresses
-    current_cong = others[others['congress_id'] == '115'].copy()
-    prev_cong = others[others['congress_id'] != '115'].copy()
+    current_cong = others[others['congress_id'] == current_congress].copy()
+    prev_cong = others[others['congress_id'] != current_congress].copy()
 
     prev_cong.loc[:, 'labels'] = 0
 
@@ -191,14 +195,16 @@ def get_bill_data():
     to_pres = current_cong[(current_cong['bill_status'] == 'To President') | (current_cong['bill_status'] == 'Resolving Differences')].copy()
     on_floor = current_cong[(current_cong['bill_status'] != 'To President') & (current_cong['bill_status'] != 'Resolving Differences')].copy()
 
-    to_pres.loc[:, 'labels'] = 1
+    if len(to_pres) > 0:
+        to_pres.loc[:, 'labels'] = 1
 
 
     # break up bills on the floor to failed (0) and not failed
     failed = on_floor[on_floor['bill_status'].str.startswith('Failed')].copy()
     not_failed = on_floor[~on_floor['bill_status'].str.startswith('Failed')].copy()
 
-    failed.loc[:, 'labels'] = 0
+    if len(failed) > 0:
+        failed.loc[:, 'labels'] = 0
 
 
 
@@ -207,7 +213,8 @@ def get_bill_data():
     introduced = not_failed[not_failed['bill_status'] == 'Introduced'].copy()
     beyond_intro = not_failed[not_failed['bill_status'] != 'Introduced'].copy()
 
-    introduced.loc[:, 'labels'] = 'in_progress'
+    if len(introduced) > 0:
+        introduced.loc[:, 'labels'] = 'in_progress'
 
 
 
@@ -216,7 +223,8 @@ def get_bill_data():
     passed_opp_chamber = beyond_intro[(beyond_intro['bill_status'] == 'Passed House') & (beyond_intro['leg_id'].str.startswith('S')) | 
                               (beyond_intro['bill_status'] == 'Passed Senate') & (beyond_intro['leg_id'].str.startswith('H'))].copy()
 
-    passed_opp_chamber.loc[:, 'labels'] = 1
+    if len(passed_opp_chamber) > 0:
+        passed_opp_chamber.loc[:, 'labels'] = 1
 
 
 
@@ -224,27 +232,38 @@ def get_bill_data():
     in_orig_chamber = beyond_intro[(beyond_intro['bill_status'] == 'Passed House') & (beyond_intro['leg_id'].str.startswith('H')) | 
                               (beyond_intro['bill_status'] == 'Passed Senate') & (beyond_intro['leg_id'].str.startswith('S'))].copy()
 
-    in_orig_chamber.loc[:, 'labels'] = 'in_progress'
+    if len(in_orig_chamber) > 0:
+        in_orig_chamber.loc[:, 'labels'] = 'in_progress'
 
 
 
     # bring all the information back together
-    data_l = pd.concat([became_law, prev_cong, to_pres, failed, introduced, passed_opp_chamber, in_orig_chamber])
+    df_list = [became_law, prev_cong, to_pres, failed, introduced, passed_opp_chamber, in_orig_chamber]
 
+    dfs_to_concat = []
+    for df in df_list:
+        if df.shape[0] > 0:
+            dfs_to_concat.append(df)
 
+    data_l = pd.concat(dfs_to_concat)
+
+    
     # filter out those that are still in progress
     df_in_progress = data_l[data_l['labels'] == 'in_progress'].copy()
     df = data_l[data_l['labels'] != 'in_progress'].copy()
 
 
     # filter for most recent congress_ids
-    small_df = df[(df['congress_id'] == '116') |
-                  (df['congress_id'] == '115') | 
+    small_df = df[(df['congress_id'] == '115') | 
                   (df['congress_id'] == '114') | 
                   (df['congress_id'] == '113') | 
                   (df['congress_id'] == '112') | 
                   (df['congress_id'] == '111') | 
                   (df['congress_id'] == '110')].copy()
+    
+    # sort by date
+    small_df.sort_values('intro_date', ascending = False, inplace=True)
+    df_in_progress.sort_values('intro_date', ascending = False, inplace=True)
 
     
     print('------------------')
@@ -280,6 +299,7 @@ def process_corpus(df, corpus_col_name):
     documents = list(df[corpus_col_name])
 
     # remove numbers
+    # consider removing only single digit numbers in stop_words
     documents = list(map(lambda x: ' '.join(re.split('[,_\d]+', x)), documents))
     
     # clip the intro of each bill
@@ -299,6 +319,8 @@ def process_corpus(df, corpus_col_name):
     stop_words.extend(['th', 'st', 'nd', 'h.r', 'h.', 'r.', 'ih', 's.', 'introduced', 'page', 'stat', '--'])
     stop_words.extend(['one', 'hundred', 'sixteenth', 'fifteenth', 'fourteenth', 'thirteenth', 'twelfth', 'eleventh', 'tenth'])
     stop_words.extend(['two', 'thousand', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'])
+#     consider only removing single-digit numbers
+#     stop_words.extend([])
     # print(stop_words)
     corpus = [[token for token in doc if token not in stop_words] for doc in corpus]
     # corpus[0]
