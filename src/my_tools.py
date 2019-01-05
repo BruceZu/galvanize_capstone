@@ -238,12 +238,13 @@ def get_bill_data():
 
 
     # filter for most recent congress_ids
-    small_df = df[(df['congress_id'] == '115') | 
-              (df['congress_id'] == '114') | 
-              (df['congress_id'] == '113')| 
-              (df['congress_id'] == '112')| 
-              (df['congress_id'] == '111')| 
-              (df['congress_id'] == '110')].copy()
+    small_df = df[(df['congress_id'] == '116') |
+                  (df['congress_id'] == '115') | 
+                  (df['congress_id'] == '114') | 
+                  (df['congress_id'] == '113') | 
+                  (df['congress_id'] == '112') | 
+                  (df['congress_id'] == '111') | 
+                  (df['congress_id'] == '110')].copy()
 
     
     print('------------------')
@@ -264,12 +265,13 @@ def process_corpus(df, corpus_col_name):
     corresponding labels.
     
     The intent of this function is to feed the output into a stratified train-test split.
+    
     -------------------
     Parameters: df - pandas dataframe
                 corpus_col_name - name of column in df that contains the text to be processed.
     -------------------
-    Returns:    X - a list of documents
-                y - a pandas series of corresponding labels as int
+    Returns:    corpus - a list of documents
+    
     --------------------
     '''
     # create a corpus
@@ -292,9 +294,11 @@ def process_corpus(df, corpus_col_name):
     print('------------------')
     print('Step 3 of 4: Stripping out stop words, punctuation, and numbers...')
     stop_words = stopwords.words('english')
+    stop_words.extend(['considered', 'passed', 'passage', 'house', 'senate'])
     stop_words.extend(['mr', 'ms', 'mrs', 'said', 'year', 'would', 'could', 'also', 'shall', '_______________________________________________________________________'])
     stop_words.extend(['th', 'st', 'nd', 'h.r', 'h.', 'r.', 'ih', 's.', 'introduced', 'page', 'stat', '--'])
-    stop_words.extend(['hundred', 'sixteenth', 'fifteenth', 'fourteenth', 'thirteenth', 'twelfth', 'eleventh', 'tenth'])
+    stop_words.extend(['one', 'hundred', 'sixteenth', 'fifteenth', 'fourteenth', 'thirteenth', 'twelfth', 'eleventh', 'tenth'])
+    stop_words.extend(['two', 'thousand', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'])
     # print(stop_words)
     corpus = [[token for token in doc if token not in stop_words] for doc in corpus]
     # corpus[0]
@@ -339,11 +343,8 @@ def process_corpus(df, corpus_col_name):
 
     print('------------------')
     print('NLP preprocessing complete ...')
-
-    X = corpus
-#     y = df['labels'].astype('int')
     
-    return X#, y
+    return corpus
 
 
 
