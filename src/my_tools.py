@@ -314,9 +314,10 @@ def process_corpus(df, corpus_col_name):
     print('------------------')
     print('Step 3 of 4: Stripping out stop words, punctuation, and numbers...')
     stop_words = stopwords.words('english')
-    stop_words.extend(['considered', 'passed', 'passage', 'house', 'senate'])
-    stop_words.extend(['mr', 'mr.', 'ms', 'ms.', 'mrs', 'mrs.', 'said', 'year', 'would', 'could', 'also', 'shall', '_______________________________________________________________________'])
-    stop_words.extend(['th', 'st', 'nd', 'h.r', 'h.', 'r.', 'ih', 's.', 'introduced', 'page', 'stat', '--'])
+    stop_words.extend(['considered', 'passed', 'passage', 'house', 'senate', 'session', 'proposing'])
+    stop_words.extend(['speaker', 'representatives', 'vice', 'president'])
+    stop_words.extend(['mr', 'mr.', 'ms', 'ms.', 'mrs', 'mrs.', 'said', 'year', 'would', 'could', 'also', 'shall', '``', '_______________________________________________________________________'])
+    stop_words.extend(['th', 'st', 'nd', 'h.r', 'h.', 'r.', 'h.j', 'j.', 'ih', 'eh', 's.', 's.j', 'introduced', 'engrossed', 'page', 'stat', '--'])
     stop_words.extend(['one', 'hundred', 'sixteenth', 'fifteenth', 'fourteenth', 'thirteenth', 'twelfth', 'eleventh', 'tenth'])
     stop_words.extend(['two', 'thousand', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'])
 #     consider only removing single-digit numbers
