@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 import copy
 import os
+from datetime import date
 
 from bs4 import BeautifulSoup
 import requests
@@ -244,7 +245,7 @@ def update_mongo_with_list_values(bill_list, collection):
                 if list_record[k] != mongo_document[k]:
                     print('\tLogging and updating {} {}... \n\t\t...from {} \n\t\t...to {}'.format(leg_id, k, mongo_document[k], list_record[k]))
 
-                    line_to_log = {'congress_id': cong_id, 'leg_id': leg_id, k: {'old_value': mongo_document[k], 'new_value': list_record[k]}}
+                    line_to_log = {'congress_id': cong_id, 'leg_id': leg_id, k: {'old_value': mongo_document[k], 'new_value': list_record[k], 'date': str(date.today().isoformat())}}
                     write_json_file(line_to_log, '/home/ubuntu/galvanize_capstone/data/logs/mongo_updates.jsonl')
                     update_mongo_value(leg_id, cong_id, k, list_record[k], collection)
         
@@ -296,9 +297,9 @@ if __name__ == '__main__':
     db = client.bills
     bill_info = db.bill_info
 
-    # reset log
-    if os.path.exists(log_path):
-        os.remove(log_path)
+#     # reset log. Decided to persist this log to track movement
+#     if os.path.exists(log_path):
+#         os.remove(log_path)
 
     # 110th Congress ends at page 444, but break will limit scraping
     page_range = range(1, 500)
