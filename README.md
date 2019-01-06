@@ -50,10 +50,32 @@ The process for labeling somewhat mirrored the [process](https://www.usa.gov/how
 
 
 ### Step 3: Modeling
-nlp
+
+#### Natural Language Processing (NLP)
+
+##### The NLP Pipeline
+Tokenize
+Strip stop words, numbers, punctutation, special characters
+    stop words - noise vs. signal
+Lemmatize
+
+
+
+##### Noise vs. Signal
+congress id, year will always be the most recent. can't use to train
+bill numbers, district repeat across sessions and refer to different text/regions, can't use
+
+
+
+In thinking about the modeling, I had to consider what was going to be the input. Since all predictions will be from the most recent Congress, the Congress ID and the year should not be a part of the training. However, the session of congress -- either 1 or 2 -- will be a factor since this repeats with each Congress. Legislative district cannot be a feature, because LD 1 in Arizona is in now way related to LD1 in Massachusetts. 
+
 random forest
 boosting
 graph theory/neighborhoods
+
+
+
+What I noticed while investigating the nlp model is that many of the features that I originally intended on modeling separately in a Decision Tree-based model were part of the text (i.e. the session of Congress, )
 
 
 ### Additional Information
