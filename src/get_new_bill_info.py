@@ -304,7 +304,7 @@ if __name__ == '__main__':
     # 110th Congress ends at page 444, but break will limit scraping
     page_range = range(1, 500)
     
-    min_cong_id = 115
+    min_cong_id = 116
 
     url_root = 'https://www.congress.gov/search?q=%7B%22source%22%3A%22legislation%22%7D&pageSize=250&page='
 
