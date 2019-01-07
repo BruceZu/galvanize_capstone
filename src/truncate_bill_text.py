@@ -30,6 +30,8 @@ if __name__ == '__main__':
 
     # get doc count to show status
     doc_count = bill_info.count_documents({'body': {'$regex': '(.+)'}, 'bill_text': None})
+    print('-------------------')
+    print('There are {} bills needing truncated text'.format(doc_count))
     
     # retrieve Mongo documents
     documents = bill_info.find({'body': {'$regex': '(.+)'}, 'bill_text': None})
