@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Bills Currently In Progress</title>
+    <title>Predictions</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Bootstrap example in Agile Data Science, 2.0">
     <meta name="author" content="Russell Jurney">
@@ -16,7 +16,7 @@
       <!-- Begin page content -->
       <div class="container">
         <div class="page-header">
-          <h1>Bills Currently In Progress</h1>
+          <h1>Predicted Probabilities</h1>
         </div>
         <p class="lead">Bill Summaries</p>
         <table class="table">
@@ -27,6 +27,7 @@
               <th>Status</th>
               <th>Congress ID</th>
               <th>Description</th>
+	      <th>Probability of Passage</th>
           </thead>
           <tbody>
             {% for row in rows -%}
@@ -37,6 +38,7 @@
               <td>{{row.bill_status}}</td>
               <td>{{row.congress_id}}</td>
               <td>{{row.desc}}</td>
+	      <td>{{row.probability}}</td>
             </tr>
             {% endfor -%}
           </tbody>
@@ -48,7 +50,7 @@
 
     <div id="footer">
       <div class="container">
-	      <p class="muted credit">Information scraped from <a href="https://www.congress.gov/search?q=%7B%22source%22%3A%22legislation%22%7D">Congress.gov</a> by <a href="https://github.com/magdiel85281/galvanize_capstone">Magdiel Delgadillo</a>, 2018
+	      <p class="muted credit">Probabilities calculated using sklearn <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">RandomForestClassifier</a> , 2019
       </div>
     </div>
     <script src="/static/bootstrap.min.js"></script>
