@@ -16,3 +16,7 @@ python $PROJECT_HOME/get_bill_text.py
 echo "" | tee -a $LOG_FILE
 echo "Running get_amendment_count.py to populate amendment counts into new Mongo documents" | tee -a $LOG_FILE
 python $PROJECT_HOME/get_amendment_count.py
+
+echo "" | tee -a $LOG_FILE
+echo "Running truncate_bill_text.py to truncate bill texts on Mongo documents" | tee -a $LOG_FILE
+python $PROJECT_HOME/truncate_bill_text.py
