@@ -29,10 +29,10 @@ if __name__ == '__main__':
     bill_info = db.bill_info
 
     # get doc count to show status
-    doc_count = bill_info.count_documents({'body': {'$regex': '(.+)'}})
+    doc_count = bill_info.count_documents({'body': {'$regex': '(.+)'}, 'bill_text': None})
     
     # retrieve Mongo documents
-    documents = bill_info.find({'body': {'$regex': '(.+)'}})
+    documents = bill_info.find({'body': {'$regex': '(.+)'}, 'bill_text': None})
 
     i = 0
     
@@ -61,7 +61,7 @@ if __name__ == '__main__':
             header_text = 'AN ACT'
 
         else: 
-            header_text = 'Publishing Office'
+            header_text = 'ing Office'
 
         text_start = bill_text.find(header_text)
 
@@ -78,6 +78,6 @@ if __name__ == '__main__':
         update_mongo_bill_text(leg_id, cong_id, bill_text_trunc, bill_info)     
         
         # show status
-        if i%200 == 0:
+        if i%500 == 0:
             print('{:.2f}% complete'.format(i / doc_count))
         i += 1
