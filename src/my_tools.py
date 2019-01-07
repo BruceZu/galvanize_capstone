@@ -302,8 +302,8 @@ def process_corpus(df, corpus_col_name):
     # consider removing only single digit numbers in stop_words
     documents = list(map(lambda x: ' '.join(re.split('[,_\d]+', x)), documents))
     
-    # clip the intro of each bill
-    documents = list(map(lambda x: x[(x.index('Office]') + 8):], documents))
+#     # clip the intro of each bill
+#     documents = list(map(lambda x: x[(x.index('Office]') + 8):], documents))
 
     # tokenize the corpus
     print('------------------')
