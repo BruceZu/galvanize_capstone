@@ -96,7 +96,7 @@ def get_bill_data():
     
     # get mongoo data and convert mongo query resuls to dataframe
     # need to execute query (.find) everytime i refer to it?
-    records_with_text = bill_info.find({'body': {'$regex': '(.+)'}})
+    records_with_text = bill_info.find({'bill_text': {'$regex': '(.+)'}})
     data = pd.DataFrame(list(records_with_text))
 #     documents = bill_info.find()
 #     data = pd.DataFrame(list(documents))
@@ -108,7 +108,7 @@ def get_bill_data():
 #     data = data[(data['leg_type'] != 'RESOLUTION') & (data['leg_type'] != 'CONCURRENT RESOLUTION') & (data['leg_type'] != 'AMENDMENT')].copy()
     
     # create column for character counts of the bill text
-    bill_lengths = list(map(lambda x: len(x), data['body']))
+    bill_lengths = list(map(lambda x: len(x), data['bill_text']))
     data['bill_char_counts'] = bill_lengths
     
     # convert date column to type datetime
