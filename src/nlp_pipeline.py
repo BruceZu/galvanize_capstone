@@ -17,7 +17,7 @@ y = data['labels']
 
 print('----------------')
 print('Processing bill text through nlp pipeline... ')
-X = process_corpus(data, 'body')
+X = process_corpus(data, 'bill_text')
 
 # output corpus to eliminate multiple preprocessing events.
 outfile_path = '/home/ubuntu/galvanize_capstone/data/nlp/corpus_with_labels.jsonl'
