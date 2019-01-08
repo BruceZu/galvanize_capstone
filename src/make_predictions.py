@@ -11,6 +11,7 @@ from pymongo import MongoClient
 from my_tools import get_bill_data, process_corpus
 from sklearn.externals import joblib
 
+from datetime import datetime
 import matplotlib.pyplot as plt
 
 # initialize Mongo client
@@ -34,10 +35,12 @@ classifier = joblib.load('pickle_files/nlp_randomForest.pkl')
 print('Pickled models loaded.')
 
 
+
 # Put bill text from bills still in progress through the nlp pipeline
 print('---------------')
 print('Preprocessing bill text...')
 corpus = process_corpus(in_progress, 'bill_text')
+
 
 
 # Vectorize the text for modeling
@@ -48,19 +51,31 @@ corpus_vec = vectorizer.transform(corpus)
 
 
 
+
 print('---------------')
 print('Calculating predicted probabilities...')
 y_pred = classifier.predict(corpus_vec)
-y_pred_proba = classifier.predict_proba(corpus_vec)
+y_pred_proba = classifier.predict_proba(corpus_vec)[:, 1]
 
 
+print('---------------')
+print('Inserting the following predicted probabilities into Mongo...')
+print(y_pred_proba)
 
 # add probabilities to dataframe and load dataframe to Mongo collection predictions
-in_progress['probability'] = y_pred_proba[:, 1]
+in_progress['probability'] = y_pred_proba
+
+# format columns for flask app
+in_progress['intro_date'] = in_progress['intro_date'].apply(lambda x: x.strftime('%m/%d/%Y'))
+in_progress['probability'] = in_progress['probability'].round(5)
 
 # drop id_, new collection will add a new id_
 in_progress.drop('_id', axis = 1, inplace = True)
 
+
+
 # reset collection and insert new data
 db.predictions.drop()
 predictions.insert_many(in_progress.to_dict('records'))
+print('---------------')
+print('Loaded {} predictions. Script complete. DATA SCIENCE!!!'.format(len(y_pred_proba)))
