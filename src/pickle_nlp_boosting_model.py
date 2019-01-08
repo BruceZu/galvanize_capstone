@@ -32,13 +32,13 @@ print('-------------------')
 print('Performing train-test split...')
 X_train, X_test, y_train, y_test = train_test_split(X, y, stratify = y)#, random_state = 123)
 
-# vectorizing 6M of ~30M dimensions with n-grams, l1 norm (simple avg) or l2 norm (avg**2)
+# vectorizing 15M of ~30M dimensions with n-grams, l1 norm (simple avg) or l2 norm (avg**2)
 # use_idf=True gives more weight to words, n_grams that appear less frequently in the corpus
 # sublinear_tf=True reduces the bias of length
 print('-------------------')
 print('Vectorizing...')
 tfvect = TfidfVectorizer(ngram_range=(1, 4), 
-                         max_features = 15000000,
+                         max_features = 6000000,
                          norm = 'l2',              #default value
                          use_idf = True,           #default value
                          sublinear_tf = True)
@@ -62,7 +62,7 @@ joblib.dump(tfvect, pickle_path)
 print('Pickling complete.')
 
 
-# # load the TfidfVectorizer if memory fails
+# # load the TfidfVectorizer if needed
 # print('-------------------')
 # print('Loading the pickled TfidfVectorizer...')
 # pickle_path = 'pickle_files/tfidfVectorizer.pkl'

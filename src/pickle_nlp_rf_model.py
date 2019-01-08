@@ -41,7 +41,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, stratify = y)#, random
 print('-------------------')
 print('Vectorizing...')
 tfvect = TfidfVectorizer(ngram_range = (1, 4), 
-                         max_features = 15000000,
+                         max_features = 6000000,
                          norm = 'l2',              #default value
                          use_idf = True,           #default value
                          sublinear_tf = True)
@@ -71,14 +71,17 @@ features = tfvect.get_feature_names()
 # dump the TfidfVectorizer
 print('-------------------')
 print('Pickling the TfidfVectorizer...')
-joblib.dump(tfvect, 'pickle_files/tfidfVectorizer.pkl')
+pickle_path = 'pickle_files/tfidfVectorizer.pkl'
+if os.path.exists(pickle_path):
+    os.remove(pickle_path)
+joblib.dump(tfvect, pickle_path)
 print('Pickling complete.')
 
 
 print('-------------------')
 print('Training Random Forest Classifier with vectorized results...')
 rf = RandomForestClassifier(n_estimators = 100, 
-#                             max_features = 6000000,
+                            max_features = 3000000,
                             max_depth = 3, 
                             min_samples_split = 2, 
                             min_samples_leaf = 15, 
