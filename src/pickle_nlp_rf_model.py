@@ -84,7 +84,8 @@ rf = RandomForestClassifier(n_estimators = 100,
                             max_features = 3000000,
                             max_depth = 3, 
                             min_samples_split = 2, 
-                            min_samples_leaf = 15, 
+                            min_samples_leaf = 1,
+                            class_weight = 'balanced',
                             n_jobs = -1)
 rf.fit(X_train_vec, y_train)
 
