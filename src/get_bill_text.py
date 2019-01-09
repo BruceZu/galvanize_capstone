@@ -174,10 +174,10 @@ def initiate_process(year, collection):
                 update_mongo_body(bill_text, leg_id, cong_id, collection)
 
 
-            if i%100 == 0:
+            if i%20 == 0:
                 print('+++++++++')
                 print(rec['leg_id'])
-                print('{:.2f}% complete'.format(100 * i / record_count))
+                print('{:.2f}% complete checking bill text'.format(100 * i / record_count))
                 print('+++++++++')
             i += 1
                 

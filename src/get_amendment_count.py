@@ -176,10 +176,10 @@ def initiate_process(year, collection):
                 update_mongo_num_of_amendments(leg_id, cong_id, amendment_count, collection)
 
             
-            if i%10 == 0:
+            if i%20 == 0:
                 print('+++++++++')
                 print(rec['leg_id'])
-                print('{:.2f}% complete'.format(100 * i / record_count))
+                print('{:.2f}% complete checking amendment counts'.format(100 * i / record_count))
                 print('+++++++++')
             i += 1
                 

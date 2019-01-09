@@ -2,6 +2,8 @@
 This script truncates the 'body' in each Mongo document to store the actual bill text in key bill_text
 '''
 from pymongo import MongoClient
+from my_tools import read_jsonl_file
+from datetime import date
 
 def update_mongo_bill_text(leg_id, cong_id, bill_text_trunc, collection):
     '''
@@ -27,6 +29,19 @@ if __name__ == '__main__':
     client = MongoClient()
     db = client.bills
     bill_info = db.bill_info
+    
+    # retrieve logs where the bill text has changed when get_bill_text was run
+    log_path = '/home/ubuntu/galvanize_capstone/data/logs/mongo_updates.jsonl'
+    logs = read_jsonl_file(log_path)
+
+    for log in logs:
+        if 'body' in log.keys():
+            print('----------------------')
+            print('----------------------')
+            cong_id = log['congress_id']
+            leg_id = log['leg_id'] 
+            print('The bills text for Congress ID {}, {} has changed. Updating truncated text'.format(cong_id, leg_id))
+
 
     # get doc count to show status
     doc_count = bill_info.count_documents({'body': {'$regex': '(.+)'}, 'bill_text': None})
@@ -80,6 +95,6 @@ if __name__ == '__main__':
         update_mongo_bill_text(leg_id, cong_id, bill_text_trunc, bill_info)     
         
         # show status
-        if i%500 == 0:
-            print('{:.2f}% complete'.format(i / doc_count))
+        if i%20 == 0:
+            print('{:.2f}% complete truncating bill text'.format(i / doc_count))
         i += 1
