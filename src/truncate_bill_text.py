@@ -84,7 +84,7 @@ if __name__ == '__main__':
             if log['body']['date'] == today:
                 cong_id = log['congress_id']
                 leg_id = log['leg_id'] 
-                print('The bills text for Congress ID {}, {} has changed. Updating truncated text'.format(cong_id, leg_id))
+                print('\t\tThe bills text for Congress ID {}, {} has changed. Updating truncated text'.format(cong_id, leg_id))
 
                 # use cong_id and leg_id in log to pull bill text from Mongo and clip it
                 doc = bill_info.find_one({'congress_id': cong_id, 'leg_id': leg_id})
