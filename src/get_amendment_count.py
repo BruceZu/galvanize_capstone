@@ -172,7 +172,6 @@ def initiate_process(year, collection):
                 print('Amendment count for Congress ID {}, {} has changed. Updating...'.format(cong_id, leg_id))
                 line_to_log = {'congress_id': cong_id, 'leg_id': leg_id, 'num_of_amendments': {'old_value': rec['num_of_amendments'], 'new_value': amendment_count, 'date': str(date.today().isoformat())}}
                 write_json_file(line_to_log, log_path)
-                update_mongo_body(bill_text, leg_id, cong_id, collection)
                 update_mongo_num_of_amendments(leg_id, cong_id, amendment_count, collection)
 
             
