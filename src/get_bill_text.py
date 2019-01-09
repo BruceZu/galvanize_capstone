@@ -168,13 +168,11 @@ def initiate_process(year, collection):
                 leg_id = rec['leg_id']
                 cong_id = rec['congress_id']
                 
+                print('Bill text for Congress ID {}, {} has changed. Updating...'.format(cong_id, leg_id))
                 line_to_log = {'congress_id': cong_id, 'leg_id': leg_id, 'body': {'old_value': rec['body'], 'new_value': bill_text, 'date': str(date.today().isoformat())}}
                 write_json_file(line_to_log, log_path)
                 update_mongo_body(bill_text, leg_id, cong_id, collection)
 
-            else:
-                continue
-                
 
             if i%100 == 0:
                 print('+++++++++')

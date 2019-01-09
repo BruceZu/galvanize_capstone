@@ -15,7 +15,6 @@ from datetime import date
 
 from my_tools import write_json_file
 
-
 def url_builder(record_url):
     '''
     ------------------------------------------
@@ -106,7 +105,6 @@ def update_mongo_num_of_amendments(leg_id, cong_id, amend_count, collection):
     '''
     collection.update_one({'leg_id': leg_id, 'congress_id': cong_id}, {'$set': {'num_of_amendments': amend_count}})
 
-
 def initiate_process(year, collection):
     '''
     ------------------------------------------
@@ -149,7 +147,7 @@ def initiate_process(year, collection):
     # this version checks, logs, and updates num_of_amendments 
     records_to_populate = collection.find({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}})
     record_count = collection.count_documents({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}})
-    print('--> Number of records to update for year {}: {}'.format(year, record_count))
+    print('--> Number of records to check for year {}: {}'.format(year, record_count))
     
     log_path = '/home/ubuntu/galvanize_capstone/data/logs/mongo_updates.jsonl'
     i = 0
@@ -158,25 +156,27 @@ def initiate_process(year, collection):
         for rec in records_to_populate:
             # get complete url using url_builder
             url = url_builder(rec['leg_url'])
+            print(url)
             # scrape url
             soup = get_soup(url)
             # get amendment count
             amendment_count = get_num_of_amendments(soup)
+            print('\tMongo amendment count:   {}'.format(rec['num_of_amendments']))
+            print('\tScraped amendment count: {}'.format(amendment_count))
 
             # update mongo record with bill text
-            if amendment_count != rec['num_of_amendments']
+            if str(amendment_count) != str(rec['num_of_amendments']):
                 leg_id = rec['leg_id']
                 cong_id = rec['congress_id']
                 
+                print('Amendment count for Congress ID {}, {} has changed. Updating...'.format(cong_id, leg_id))
                 line_to_log = {'congress_id': cong_id, 'leg_id': leg_id, 'num_of_amendments': {'old_value': rec['num_of_amendments'], 'new_value': amendment_count, 'date': str(date.today().isoformat())}}
                 write_json_file(line_to_log, log_path)
                 update_mongo_body(bill_text, leg_id, cong_id, collection)
                 update_mongo_num_of_amendments(leg_id, cong_id, amendment_count, collection)
 
-            else:
-                continue
             
-            if i%100 == 0:
+            if i%10 == 0:
                 print('+++++++++')
                 print(rec['leg_id'])
                 print('{:.2f}% complete'.format(100 * i / record_count))
@@ -194,21 +194,22 @@ if __name__ == '__main__':
     bill_info = db.bill_info
 
     # iterate through date range in reverse
-    year_range = range(2007, 2020)[::-1]
+#     year_range = range(2007, 2020)[::-1]
+    year_range = range(2019, 2020)[::-1]
 
     for y in year_range[::2]:
         t1 = threading.Thread(target=initiate_process, args=[y, bill_info])
-        t2 = threading.Thread(target=initiate_process, args=[y-1, bill_info])
+#         t2 = threading.Thread(target=initiate_process, args=[y-1, bill_info])
 #         t3 = threading.Thread(target=initiate_process, args=[y-2, bill_info])
 #         t4 = threading.Thread(target=initiate_process, args=[y-3, bill_info])
         
         t1.start()
-        t2.start()
+#         t2.start()
 #         t3.start()
 #         t4.start()
 
         t1.join()
-        t2.join()
+#         t2.join()
 #         t3.join()
 #         t4.join()
         
