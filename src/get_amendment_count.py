@@ -11,6 +11,7 @@ import requests
 import threading
 from random import randint
 from time import sleep
+from datetime import date
 
 from my_tools import write_json_file
 
@@ -116,9 +117,42 @@ def initiate_process(year, collection):
     print('--------------------')
     print('Cleaning up year {}'.format(year))
     year_str = str(year)
-    records_to_populate = collection.find({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}, 'num_of_amendments': None})
-    record_count = collection.count_documents({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}, 'num_of_amendments': None})
-    print('--> Number of records with no amendment counts for year {}: {}'.format(year, record_count))
+    
+# ##############################
+#     # this version only populates num_of_amendments if it doesn't already exist
+#     records_to_populate = collection.find({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}, 'num_of_amendments': None})
+#     record_count = collection.count_documents({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}, 'num_of_amendments': None})
+#     print('--> Number of records with no amendment counts for year {}: {}'.format(year, record_count))
+    
+#     if record_count > 0:
+#         for rec in records_to_populate:
+#             # get complete url using url_builder
+#             url = url_builder(rec['leg_url'])
+#             # scrape url
+#             soup = get_soup(url)
+#             # get amendment count
+#             amendment_count = get_num_of_amendments(soup)
+
+#             # update mongo record with bill text
+#             bill_issue = rec['leg_id']
+#             cong_id = rec['congress_id']
+#             update_mongo_num_of_amendments(bill_issue, cong_id, amendment_count, collection)
+
+            
+#             r = collection.count_documents({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}, 'num_of_amendments': None})
+#             if r%100 == 0:
+#                 print('+++++++++')
+#                 print('Year {}: {} records remaining with no amendment counts'.format(year, r))
+# ##############################
+                
+                
+    # this version checks, logs, and updates num_of_amendments 
+    records_to_populate = collection.find({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}})
+    record_count = collection.count_documents({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}})
+    print('--> Number of records to update for year {}: {}'.format(year, record_count))
+    
+    log_path = '/home/ubuntu/galvanize_capstone/data/logs/mongo_updates.jsonl'
+    i = 0
     
     if record_count > 0:
         for rec in records_to_populate:
@@ -130,16 +164,26 @@ def initiate_process(year, collection):
             amendment_count = get_num_of_amendments(soup)
 
             # update mongo record with bill text
-            bill_issue = rec['leg_id']
-            cong_id = rec['congress_id']
-            update_mongo_num_of_amendments(bill_issue, cong_id, amendment_count, collection)
+            if amendment_count != rec['num_of_amendments']
+                leg_id = rec['leg_id']
+                cong_id = rec['congress_id']
+                
+                line_to_log = {'congress_id': cong_id, 'leg_id': leg_id, 'num_of_amendments': {'old_value': rec['num_of_amendments'], 'new_value': amendment_count, 'date': str(date.today().isoformat())}}
+                write_json_file(line_to_log, log_path)
+                update_mongo_body(bill_text, leg_id, cong_id, collection)
+                update_mongo_num_of_amendments(leg_id, cong_id, amendment_count, collection)
 
+            else:
+                continue
             
-            r = collection.count_documents({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}, 'num_of_amendments': None})
-            if r%100 == 0:
+            if i%100 == 0:
                 print('+++++++++')
-                print('Year {}: {} records remaining with no amendment counts'.format(year, r))
-
+                print(rec['leg_id'])
+                print('{:.2f}% complete'.format(100 * i / record_count))
+                print('+++++++++')
+            i += 1
+                
+                
                 
                 
 if __name__ == '__main__':
