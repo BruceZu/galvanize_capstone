@@ -76,7 +76,7 @@ if __name__ == '__main__':
     log_path = '/home/ubuntu/galvanize_capstone/data/logs/mongo_updates.jsonl'
     logs = read_jsonl_file(log_path)
     
-    today = date.today.isoformat()
+    today = date.today().isoformat()
 
     for log in logs:
         # check to see if the body was updated with get_bill_text today
