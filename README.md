@@ -73,7 +73,7 @@ Early in the project, I used Multinomial Naive Bayes to model the vectorized tex
 
 The next few iterations involved sklearn's Random Forest Classifier. This resulted in recall and f1 score of 98% - 99%. These scores are great!... but too good. This  _screamed_ data leakage, meaning there was something in the text itself that indicated the bill had passed.
 
-Once the data leakage was (mostly) plugged up, I felt more confidence in my findings. Below are the largest factors and types of bills that determine wheter a bill will pass, in descending order after references to the first two items have been removed: 
+Once the data leakage was (mostly) plugged up, I felt more confidence in my findings. Below are the largest factors and types of bills that determine whether a bill will pass, in descending order (the image below shows that same after references to the first two items have been removed): 
 
 * Multiple references to U.S. Codes (permanent laws). Speculation: bills that supplement or amend previously existing laws are more likely to pass than bills that are entirely new.
 * Catering to the constituency of those sponsoring the bill in the form of renaming a federal building (i.e. U.S. Post Office) to commemorate a person or group.
