@@ -27,7 +27,18 @@ def update_mongo_bill_text(leg_id, cong_id, bill_text_trunc, collection):
 
 def truncate_bill_body(bill_text):
     '''
+    ------------------------------------------
+    Clips the header and footer of bill_text to eliminate (or just reduce?) data leakage.
     
+    
+    ------------------------------------------
+    Parameters: bill_text - 'body' field in Mongo documents
+    
+    
+    ------------------------------------------
+    Returns:    bill_text_trunc - clipped text
+    
+    ------------------------------------------
     '''
     # search through headers to get index
     if ('A BILL' in bill_text[:5000]):
