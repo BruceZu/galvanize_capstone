@@ -71,15 +71,18 @@ The predictions on the new data are created by running it through make_predictio
 ## Results
 Early in the project, I used Multinomial Naive Bayes to model the vectorized text. This gave me recall scores in the realm of 53% - 57%. Not bad, but I was hoping for scores in the neighborhood of the 70's.
 
-The next few iterations involved sklearn's Random Forest Classifier. This resulted in recall and f1 score of 98% - 99%. These scores are great!... but too good. This screamed data leakage, meaning there was something in the text itself that indicated the bill had passed.
+The next few iterations involved sklearn's Random Forest Classifier. This resulted in recall and f1 score of 98% - 99%. These scores are great!... but too good. This **Strong** __screamed__ data leakage, meaning there was something in the text itself that indicated the bill had passed.
 
-Once the data leakage was (mostly) plugged up, I felt more confidence in my findings. Below are the largest factors and types of bills that determine wheter a bill will pass, in descending order: 
+Once the data leakage was (mostly) plugged up, I felt more confidence in my findings. Below are the largest factors and types of bills that determine wheter a bill will pass, in descending order after references to the first two items have been removed: 
 
 * Multiple references to U.S. Codes (permanent laws). Speculation: bills that supplement or amend previously existing laws are more likely to pass than bills that are entirely new.
 * Catering to the constituency of those sponsoring the bill in the form of renaming a federal building (i.e. U.S. Post Office) to commemorate a person or group.
 * Named bills, like the "Pandemic and All-Hazards Preparedness and Advancing Innovation Act of 2019" (an indicator that the bill has passed in the originating chamber)
 * Food and beverage consumption
 * Tariffs
+
+
+![feature_importances](img/feature_importance.png)
 
 
 
