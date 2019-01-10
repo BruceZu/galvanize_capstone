@@ -82,7 +82,7 @@ Once the data leakage was (mostly) plugged up, I felt more confidence in my find
 * Tariffs
 
 
-![feature_importances](img/feature_importance.png)
+![feature_importance_2](img/feature_importance_2.png)
 
 
 
