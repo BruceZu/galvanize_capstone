@@ -81,14 +81,13 @@ Next, Random Forest... getting a recall and f1 score of 98% - 99%. These scores 
 
 
 
-random forest
-boosting
-graph theory/neighborhoods
+random forest (nlp) - used class_weights = 'balanced'
+boosting (numerical) - upsampled
 
 
-
-What I noticed while investigating the nlp model is that many of the features that I originally intended on modeling separately in a Decision Tree-based model were part of the text (i.e. the session of Congress, )
 
 
 ### Additional Information
 The 115th Congress ends on January 3, 2018. Every bill and joint resolution that hasn't become law by the end of that day will be labeled as "not passed". 
+
+Was hoping to incorporate the use of graph theory/neighborhoods
