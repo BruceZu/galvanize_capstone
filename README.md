@@ -6,7 +6,7 @@ This project is an attempt to predict whether a bill or a joint resolution will 
 
 Upon my research into this subject, it surprised me that fewer than 5% of the bills and joint resolutions introduced in Congress ever make it into law. The number increases to 37% if they make it out of the originating chamber.
 
-![Bill Histogram](img/bill_histogram.png)
+![Bill Histogram](img/new_bill_histogram.png)
 
 
 ## The Resources
@@ -62,6 +62,8 @@ I decided on using [recall, or sensitivity](https://en.wikipedia.org/wiki/Sensit
 
 ### Step 4: Making and Showing Predictions
 The data on [Congress.gov](https://www.congress.gov/search?q={%22source%22:%22legislation%22}&pageSize=250) is updated daily. So, in order to include this data in the project, get_new_data.sh was created to run several python scripts in successsion daily that scrapes the data from the most recent congressional session, compares certain fields to documents already stored in Mongo, and adds, updates, and formats documents as needed.
+
+![bash_script](img/bash_script.png)
 
 The predictions on the new data are created by running it through make_predictions.py. This script transforms and makes predictions on the data based on the previously pickled models, accounting for the fact that some of those bills that have already passed one chamber. The predictions of each the Random Forest (bill text) and the Gradient Boosting (numerical data) Classifiers, along with the blended predictions, are stored in Mongo. These results are then queried by mongo_to_flask.py for the Flask app to display on a browser.
 
