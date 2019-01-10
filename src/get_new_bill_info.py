@@ -319,3 +319,7 @@ if __name__ == '__main__':
         min_cong_id_on_page = min_cong_id_in_soup(soup)
         if min_cong_id_on_page < min_cong_id:
             break
+            
+    print('-----------')
+    print('-----------')
+    print('New bill data gathering complete!... DATA SCIENCE!!!')

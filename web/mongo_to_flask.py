@@ -31,6 +31,7 @@ client = MongoClient() # defaults to localhost
 db = client.bills
 bill_info = db.bill_info
 predictions = db.predictions
+test_preds = db.test_preds
 
 
 
@@ -45,7 +46,7 @@ def welcome_page():
 @app.route('/predictions')
 def show_predictions():
     # return list of bills still in progress with predicted probabilities
-    documents = predictions.find({'$query': {}, '$orderby': {'probability': -1}})
+    documents = db.predictions.find({'$query': {}, '$orderby': {'pred_proba': -1}})
     
     return render_template('predictions_table.html', rows=list(documents))
     

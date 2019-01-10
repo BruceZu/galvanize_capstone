@@ -11,6 +11,7 @@ import requests
 import threading
 from random import randint
 from time import sleep
+from datetime import date
 
 from my_tools import write_json_file
 
@@ -117,16 +118,43 @@ def initiate_process(year, collection):
     Initiates process from threads.
     ----------------------------------------------
     '''
-#     client = MongoClient() # defaults to localhost
-#     db = client.bills
-#     bill_info = db.bill_info
-
     print('--------------------')
     print('Cleaning up year {}'.format(year))
     year_str = str(year)
-    records_to_populate = collection.find({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}, 'body': None})
-    record_count = collection.count_documents({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}, 'body': None})
-    print('--> Number of records with no text for year {}: {}'.format(year, record_count))
+    
+# ##################
+#     # this version only populates bill text if it doesn't already exist
+#     records_to_populate = collection.find({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}, 'body': None})
+#     record_count = collection.count_documents({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}, 'body': None})
+#     print('--> Number of records with no text for year {}: {}'.format(year, record_count))
+        
+#     if record_count > 0:
+#         for rec in records_to_populate:
+#             # get complete url using url_builder
+#             url = url_builder(rec['leg_url'])
+#             # get bill text
+#             bill_text = get_bill_text(url)
+
+#             # update mongo record with bill text
+#             bill_issue = rec['leg_id']
+#             cong_id = rec['congress_id']
+#             update_mongo_body(bill_text, bill_issue, cong_id, collection)
+
+            
+#             r = collection.count_documents({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}, 'body': None})
+#             if r%100 == 0:
+#                 print('+++++++++')
+#                 print('Year {}: {} records remaining with no text'.format(year, r))
+#                 print('+++++++++')
+# ##################    
+    
+    # this version will populate bill text regardless of whether it changed, notifying user and logging if it has changed
+    records_to_populate = collection.find({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}})
+    record_count = collection.count_documents({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}})
+    print('--> Number of documents to update text for year {}: {}'.format(year, record_count))
+    
+    log_path = '/home/ubuntu/galvanize_capstone/data/logs/mongo_updates.jsonl'
+    i = 0
     
     if record_count > 0:
         for rec in records_to_populate:
@@ -136,17 +164,23 @@ def initiate_process(year, collection):
             bill_text = get_bill_text(url)
 
             # update mongo record with bill text
-            bill_issue = rec['leg_id']
-            cong_id = rec['congress_id']
-            update_mongo_body(bill_text, bill_issue, cong_id, collection)
+            if bill_text != rec['body']:
+                leg_id = rec['leg_id']
+                cong_id = rec['congress_id']
+                
+                print('Bill text for Congress ID {}, {} has changed. Updating...'.format(cong_id, leg_id))
+                line_to_log = {'congress_id': cong_id, 'leg_id': leg_id, 'body': {'old_value': rec['body'], 'new_value': bill_text, 'date': str(date.today().isoformat())}}
+                write_json_file(line_to_log, log_path)
+                update_mongo_body(bill_text, leg_id, cong_id, collection)
 
-            
-            r = collection.count_documents({'leg_url': {'$regex': 'http'}, 'intro_date': {'$regex': year_str}, 'body': None})
-            if r%100 == 0:
+
+            if i%20 == 0:
                 print('+++++++++')
-                print('Year {}: {} records remaining with no text'.format(year, r))
+                print(rec['leg_id'])
+                print('{:.2f}% complete checking bill text'.format(100 * i / record_count))
                 print('+++++++++')
-    
+            i += 1
+                
                 
 if __name__ == '__main__':
     print('This script is populating bill text into Mongo threading two years at a time for those records without any text.')
@@ -161,17 +195,17 @@ if __name__ == '__main__':
 
     for y in year_range[::2]:
         t1 = threading.Thread(target=initiate_process, args=[y, bill_info])
-        t2 = threading.Thread(target=initiate_process, args=[y-1, bill_info])
+#         t2 = threading.Thread(target=initiate_process, args=[y-1, bill_info])
 #         t3 = threading.Thread(target=initiate_process, args=[y-2, bill_info])
 #         t4 = threading.Thread(target=initiate_process, args=[y-3, bill_info])
         
         t1.start()
-        t2.start()
+#         t2.start()
 #         t3.start()
 #         t4.start()
 
         t1.join()
-        t2.join()
+#         t2.join()
 #         t3.join()
 #         t4.join()
         
