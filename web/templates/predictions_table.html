@@ -21,24 +21,30 @@
         <p class="lead">Bill Summaries</p>
         <table class="table">
           <thead>
-              <th>Bill ID</th>
+	      <th>Bill ID</th>
               <th>Date Introduced</th>
               <th>Sponsor</th>
               <th>Status</th>
-              <th>Congress ID</th>
+              <th>Number of Cosponsors</th>
+	      <th>Number of Amendments</th>
               <th>Description</th>
-	      <th>Probability of Passage</th>
+	      <th>NLP Model Probability</th>
+	      <th>Numerical Model Probability</th>
+	      <th>Blended Probability</th>
           </thead>
           <tbody>
             {% for row in rows -%}
             <tr>
-              <td>{{row.leg_id}}</td>
+	      <td><a href={{row.leg_url}}>{{row.leg_id}}</td>
               <td>{{row.intro_date}}</td>
               <td>{{row.sponsor}}</td>
               <td>{{row.bill_status}}</td>
-              <td>{{row.congress_id}}</td>
+              <td>{{row.num_of_cosponsors}}</td>
+	      <td>{{row.num_of_amendments}}</td>
               <td>{{row.desc}}</td>
-	      <td>{{row.probability}}</td>
+	      <td>{{row.nlp_pred_proba}}</td>
+	      <td>{{row.num_pred_proba}}</td>
+	      <td>{{row.pred_proba}}</td>
             </tr>
             {% endfor -%}
           </tbody>
@@ -50,7 +56,7 @@
 
     <div id="footer">
       <div class="container">
-	      <p class="muted credit">Probabilities calculated using sklearn <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">RandomForestClassifier</a> , 2019
+	      <p class="muted credit">Probabilities calculated using sklearn <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">RandomForestClassifier</a> and <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html">GradientBoostingClassifier</a>, 2019
       </div>
     </div>
     <script src="/static/bootstrap.min.js"></script>
