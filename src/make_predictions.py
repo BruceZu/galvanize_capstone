@@ -44,13 +44,16 @@ print('---------------')
 print('\t... Scaler for numerical model...')
 sc = joblib.load('pickle_files/num_scaler.pkl')
 print('---------------')
-print('\t... Classifier for numerical model...')
-gb = joblib.load('pickle_files/num_gradientBoost.pkl')
+print('\t... Classifier for numerical model including Introduced bills...')
+gb_intro = joblib.load('pickle_files/num_all_gradientBoost.pkl')
+print('---------------')
+print('\t... Classifier for numerical model for after bill passes one chamber...')
+gb_passed_one = joblib.load('pickle_files/num_gradientBoost.pkl')
 print('Pickled models loaded.')
 
 
 
-# Put bill text from bills still in progress through the nlp pipeline
+# Put bill text from bills in progress through the nlp pipeline
 print('---------------')
 print('Preprocessing bill text...')
 corpus = process_corpus(in_progress, 'bill_text')
@@ -117,27 +120,35 @@ dummy_columns = [
             'session'
             ]
 
-data_feats = beyond_intro.loc[:, cols_to_use]
+data_feats_intro = intro.loc[:, cols_to_use]
+data_feats_passed_one = beyond_intro.loc[:, cols_to_use]
 
 # get dummies for intro_month, sponsor_party, sponsor_state, session
-data_dumm = pd.get_dummies(data_feats, columns = dummy_columns, drop_first=False)
-
+data_dumm_intro = pd.get_dummies(data_feats_intro, columns = dummy_columns, drop_first=False)
+data_dumm_passed_one = pd.get_dummies(data_feats_passed_one, columns = dummy_columns, drop_first=False)
 
 # modify columns to fit model
 for col in model_cols:
-    if col not in data_dumm.columns:
-        data_dumm[col] = 0
+    if col not in data_dumm_intro.columns:
+        data_dumm_intro[col] = 0
+    if col not in data_dumm_passed_one.columns:
+        data_dumm_passed_one[col] = 0
 
 
 
 print('-------------------')
 print('Scaling and getting predictions...')
-data_dumm = sc.transform(data_dumm)
-gb_pred_proba = gb.predict_proba(data_dumm)[:, 1]
+data_dumm_intro = sc.transform(data_dumm_intro)
+gb_intro_pred_proba = gb_intro.predict_proba(data_dumm_intro)[:, 1]
+
+data_dumm_passed_one = sc.transform(data_dumm_passed_one)
+gb_passed_one_pred_proba = gb_passed_one.predict_proba(data_dumm_passed_one)[:, 1]
 
 
-beyond_intro['num_pred_proba'] = gb_pred_proba
-intro['num_pred_proba'] = .05
+intro['num_pred_proba'] = gb_intro_pred_proba
+beyond_intro['num_pred_proba'] = gb_passed_one_pred_proba
+
+
 
 pred_df = pd.concat([intro, beyond_intro], axis = 0)
 
@@ -155,7 +166,6 @@ pred_df['pred_proba'] = pred_df['pred_proba'].round(5)
 
 # drop id_, new collection will add a new id_
 pred_df.drop('_id', axis = 1, inplace = True)
-
 
 # db.prev_predictions.drop()
 
